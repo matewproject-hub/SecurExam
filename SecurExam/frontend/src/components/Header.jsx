@@ -1,8 +1,8 @@
 import React from 'react';
-import { Shield, LogOut, Lock, Sun, Moon } from 'lucide-react';
+import { Shield, LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export default function Header({ onNavigate }) {
+export default function Header() {
   const { user, logout, theme, toggleTheme } = useAuth();
 
   const getRoleBadge = (userObj) => {

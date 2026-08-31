@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, ShieldCheck, Play, Lock, AlertCircle, CheckCircle2, Send, FileText, UserCheck } from 'lucide-react';
+import { Clock, ShieldCheck, Play, Lock, AlertCircle, CheckCircle2, Send, UserCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import Modal from '../components/Modal';
