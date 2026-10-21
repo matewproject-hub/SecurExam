@@ -18,7 +18,6 @@ export default function StudentDashboard() {
   const safePapers = generatedPapers || [];
   const safeQuestions = questions || [];
 
-  // Active Paper selection
   const activePaper = safePapers.find((p) => p.subject === user?.subject || p.paperCode === user?.paperCode) || safePapers[0] || null;
 
   const displayQuestions = activePaper?.questions && activePaper.questions.length > 0
@@ -92,11 +91,10 @@ export default function StudentDashboard() {
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // If the candidate has clicked "Start Exam", direct them to the dedicated Exam Page View
+  // PAGE 1: CANDIDATE EXAM PAPER PAGE
   if (isExamOpen) {
     return (
       <div style={{ maxWidth: '960px', margin: '0 auto', width: '100%', padding: '16px 0' }}>
-        {/* Dedicated Exam Page Top Header */}
         <div
           className="glass-panel"
           style={{
@@ -164,7 +162,6 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* Submission Receipt Callout if already submitted */}
         {isSubmitted && submissionReceipt && (
           <div
             className="glass-panel"
@@ -196,7 +193,6 @@ export default function StudentDashboard() {
           </div>
         )}
 
-        {/* Questions List & Workspace Form */}
         <div className="glass-panel" style={{ padding: '28px' }}>
           <form onSubmit={handleSubmitExam}>
             {!displayQuestions || displayQuestions.length === 0 ? (
@@ -280,10 +276,9 @@ export default function StudentDashboard() {
     );
   }
 
-  // Dashboard Overview View (Before starting exam or reviewing status)
+  // PAGE 2: CANDIDATE EXAM STATUS & TIMING
   return (
     <div style={{ maxWidth: '840px', margin: '0 auto', width: '100%', padding: '16px 0' }}>
-      {/* Student Details Card */}
       <div className="glass-panel" style={{ padding: '24px', marginBottom: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: '16px' }}>
           <div>
@@ -338,7 +333,6 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Clock Simulator Toolbar */}
       <div className="sim-toolbar">
         <div className="sim-toolbar-title">
           <Clock size={15} style={{ color: 'var(--primary)' }} />
@@ -382,7 +376,6 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Main Status & Action Card */}
       <div className={`status-action-card status-${simulatedState.toLowerCase()}`}>
         {simulatedState === 'COUNTDOWN' && (
           <div>
@@ -465,7 +458,6 @@ export default function StudentDashboard() {
         )}
       </div>
 
-      {/* Submission Receipt Banner on Dashboard */}
       {isSubmitted && submissionReceipt && (
         <div
           className="glass-panel"

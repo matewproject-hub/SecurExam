@@ -21,10 +21,8 @@ export default function CenterDashboard() {
   const { generatedPapers, questions, addAuditLog } = useData();
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Page Step State: 'LOGIN' | 'TIME_LOCK' | 'QUESTION_PAPER' | 'SUBMITTED'
   const [candidateStep, setCandidateStep] = useState('LOGIN');
 
-  // Exam Paper selection
   const [selectedPaperCode, setSelectedPaperCode] = useState(generatedPapers[0]?.paperCode || '');
 
   useEffect(() => {
@@ -35,23 +33,19 @@ export default function CenterDashboard() {
 
   const activePaper = generatedPapers.find((p) => p.paperCode === selectedPaperCode) || generatedPapers[0];
 
-  // Derive questions
   const displayQuestions = activePaper?.questions && activePaper.questions.length > 0
     ? activePaper.questions
     : questions.filter((q) => (!activePaper || q.subject === activePaper.subject));
 
-  // Candidate Login Form State
   const [studentIdInput, setStudentIdInput] = useState('');
   const [studentNameInput, setStudentNameInput] = useState('');
   const [studentPinInput, setStudentPinInput] = useState('2026');
   const [terminalError, setTerminalError] = useState('');
 
-  // Active Candidate Session State
   const [activeCandidate, setActiveCandidate] = useState(null);
   const [candidateAnswers, setCandidateAnswers] = useState({});
   const [candidateReceipt, setCandidateReceipt] = useState(null);
 
-  // Time-lock countdown seconds
   const [countdownSeconds, setCountdownSeconds] = useState(15);
 
   useEffect(() => {
@@ -61,7 +55,6 @@ export default function CenterDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Countdown timer for time-locked waiting screen
   useEffect(() => {
     let timer;
     if (candidateStep === 'TIME_LOCK' && countdownSeconds > 0) {
@@ -95,7 +88,6 @@ export default function CenterDashboard() {
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // 1. Candidate Login
   const handleCandidateLogin = (e) => {
     e.preventDefault();
     const cleanStdId = studentIdInput.trim().toUpperCase();
@@ -131,12 +123,10 @@ export default function CenterDashboard() {
     setCandidateAnswers({});
     setCandidateReceipt(null);
     setTerminalError('');
-    // Initialize countdown timer and direct to time-lock waiting page
     setCountdownSeconds(15);
     setCandidateStep('TIME_LOCK');
   };
 
-  // 2. Candidate Answer Change
   const handleCandidateAnswerChange = (qId, text) => {
     setCandidateAnswers((prev) => ({
       ...prev,
@@ -144,7 +134,6 @@ export default function CenterDashboard() {
     }));
   };
 
-  // 3. Submit Final Exam Answer Sheet
   const handleCandidateSubmitExam = (e) => {
     e.preventDefault();
     if (!activeCandidate) return;
@@ -172,7 +161,6 @@ export default function CenterDashboard() {
     setCandidateStep('SUBMITTED');
   };
 
-  // 4. Reset & Return to Candidate Login
   const handleCandidateLogout = () => {
     if (candidateStep === 'QUESTION_PAPER' && Object.keys(candidateAnswers).length > 0) {
       if (!window.confirm('You have entered answers that will be lost. Are you sure you want to exit?')) {
@@ -191,7 +179,6 @@ export default function CenterDashboard() {
 
   return (
     <div style={{ maxWidth: '960px', margin: '0 auto', width: '100%', padding: '16px' }}>
-      {/* Top Center Verification Banner */}
       <div
         className="glass-panel"
         style={{
@@ -381,7 +368,6 @@ export default function CenterDashboard() {
       {/* ============================================================== */}
       {candidateStep === 'TIME_LOCK' && activeCandidate && (
         <div>
-          {/* Candidate Session Bar */}
           <div
             className="glass-panel"
             style={{
@@ -422,7 +408,6 @@ export default function CenterDashboard() {
             </button>
           </div>
 
-          {/* Time Lock Card */}
           <div
             className="glass-panel"
             style={{
@@ -470,7 +455,6 @@ export default function CenterDashboard() {
                 : 'The scheduled start time has arrived! Click "Start Exam" below to open the question paper.'}
             </p>
 
-            {/* BUTTON CANNOT BE CLICKED UNTIL TIME STARTS */}
             <div>
               {countdownSeconds > 0 ? (
                 <button
@@ -523,7 +507,6 @@ export default function CenterDashboard() {
       {/* ============================================================== */}
       {candidateStep === 'QUESTION_PAPER' && activeCandidate && (
         <div>
-          {/* Question Paper Header Bar */}
           <div
             className="glass-panel"
             style={{
@@ -569,7 +552,6 @@ export default function CenterDashboard() {
             </div>
           </div>
 
-          {/* Question Paper Content */}
           <div className="glass-panel" style={{ padding: '28px' }}>
             <form onSubmit={handleCandidateSubmitExam}>
               {!displayQuestions || displayQuestions.length === 0 ? (

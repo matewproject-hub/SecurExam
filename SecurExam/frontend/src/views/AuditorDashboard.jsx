@@ -50,12 +50,11 @@ export default function AuditorDashboard() {
   return (
     <div className="dashboard-layout" style={{ minHeight: 'calc(100vh - 94px)' }}>
       <main className="content-viewport" style={{ width: '100%' }}>
-        {/* Title Header */}
         <div style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Audit & Verification</h2>
         </div>
 
-        {/* System Security Stats */}
+        {/* 1. AUDIT STATISTICS */}
         <div className="stats-grid">
           <div className="glass-panel stat-card">
             <div>
@@ -92,7 +91,7 @@ export default function AuditorDashboard() {
           </div>
         </div>
 
-        {/* Verification Tool */}
+        {/* 2. RECORD VERIFICATION */}
         <div className="glass-panel" style={{ padding: '20px', marginBottom: '20px', border: '1px solid rgba(0, 120, 212, 0.3)' }}>
           <h3 style={{ fontSize: '1rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <Search size={16} style={{ color: '#0078d4' }} />
@@ -114,7 +113,6 @@ export default function AuditorDashboard() {
             </button>
           </form>
 
-          {/* Verification Result Box */}
           {verificationResult && (
             <div style={{ marginTop: '20px' }}>
               {verificationResult.found ? (
@@ -175,7 +173,7 @@ export default function AuditorDashboard() {
           )}
         </div>
 
-        {/* Detailed Audit Table */}
+        {/* 3. AUDIT LOG LEDGER */}
         <div className="glass-panel" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3 style={{ fontSize: '1rem', margin: 0 }}>Audit Logs</h3>

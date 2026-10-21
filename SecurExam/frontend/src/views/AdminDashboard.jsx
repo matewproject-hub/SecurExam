@@ -26,7 +26,6 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedQuestion, setSelectedQuestion] = useState(null);
 
-  // Live timer tick for upload deadline countdown
   const [nowTime, setNowTime] = useState(new Date());
 
   useEffect(() => {
@@ -68,22 +67,18 @@ export default function AdminDashboard() {
 
   const uploadCountdown = getUploadCountdown();
 
-  // Filter questions submitted exclusively by this admin
   const currentAdminName = user?.name || 'Staff Member';
   const myQuestions = questions.filter(
     (q) => q.submittedBy === currentAdminName || q.submittedBy === user?.name
   );
 
-  // Unique subjects derived dynamically from this admin's uploaded questions
   const uniqueSubjects = Array.from(new Set(myQuestions.map((q) => q.subject))).filter(Boolean);
 
-  // Derived stats for Admin
   const stats = {
     totalSubjects: uniqueSubjects.length,
     uploadedQuestions: myQuestions.length
   };
 
-  // Manual Question Entry Form State
   const [manualForm, setManualForm] = useState({
     subject: '',
     unit: '',
@@ -104,7 +99,6 @@ export default function AdminDashboard() {
     setTimeout(() => setNotification(''), 4000);
   };
 
-  // Drag and Drop Upload with actual FileReader
   const handleDragOver = (e) => e.preventDefault();
   const handleDrop = async (e) => {
     e.preventDefault();
@@ -174,7 +168,6 @@ export default function AdminDashboard() {
     triggerNotify(`Successfully processed ${files.length} file(s). Ingested ${addedCount} question(s) into scrutiny queue.`);
   };
 
-  // Submit Manual Question
   const handleManualSubmit = (e) => {
     e.preventDefault();
     if (!manualForm.questionText.trim()) return;
@@ -212,7 +205,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="dashboard-layout">
-      {/* Sidebar Navigation */}
       <aside className="sidebar-nav">
         <div className="nav-section-label">STAFF</div>
         {navItems.map((item) => {
@@ -231,9 +223,7 @@ export default function AdminDashboard() {
         })}
       </aside>
 
-      {/* Main Content Area */}
       <main className="content-viewport">
-        {/* Top Floating Notification */}
         {notification && (
           <div
             style={{
@@ -264,7 +254,6 @@ export default function AdminDashboard() {
               <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Overview</h2>
             </div>
 
-            {/* Analytics Cards */}
             <div className="stats-grid">
               <div className="glass-panel stat-card">
                 <div>
@@ -283,7 +272,6 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Recent Questions Table */}
             <div className="glass-panel" style={{ padding: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 style={{ fontSize: '1rem', margin: 0 }}>Recent Questions</h3>
@@ -405,7 +393,6 @@ export default function AdminDashboard() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
               <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Upload Questions</h2>
 
-              {/* Time Limit Status Badge */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div
                   style={{
@@ -435,7 +422,6 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Expired / Locked Notification Callout */}
             {!uploadCheck.allowed && (
               <div
                 style={{
@@ -462,9 +448,7 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* Upload Workspace */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', opacity: uploadCheck.allowed ? 1 : 0.55 }}>
-              {/* Batch Drag-and-Drop Uploader */}
               <div className="glass-panel" style={{ padding: '20px', position: 'relative' }}>
                 <h3 style={{ fontSize: '1rem', marginBottom: '14px' }}>Bulk Import</h3>
 
@@ -479,7 +463,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Manual Question Form */}
               <div className="glass-panel" style={{ padding: '20px' }}>
                 <h3 style={{ fontSize: '1rem', marginBottom: '14px' }}>Manual Entry</h3>
 
@@ -630,7 +613,6 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Question Inspection Modal */}
         <Modal
           isOpen={!!selectedQuestion}
           onClose={() => setSelectedQuestion(null)}

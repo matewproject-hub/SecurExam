@@ -53,15 +53,12 @@ export default function SupervisorDashboard() {
   const [auditSearch, setAuditSearch] = useState('');
   const [notification, setNotification] = useState('');
 
-  // AI Paper Gen State
   const uniqueSubjects = Array.from(new Set(questions.map((q) => q.subject))).filter(Boolean);
   const [selectedGenSubject, setSelectedGenSubject] = useState(uniqueSubjects[0] || '');
 
-  // User Management State
   const [newUserForm, setNewUserForm] = useState({ name: '', role: 'Scrutiny Officer (Level 1)', clearance: 'Tier 2 Scrutiny' });
   const [showUserModal, setShowUserModal] = useState(false);
 
-  // Live Clock Tick
   const [nowTime, setNowTime] = useState(new Date());
 
   useEffect(() => {
@@ -81,7 +78,6 @@ export default function SupervisorDashboard() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
-  // Upload Countdown calculation
   const getUploadCountdown = () => {
     if (!uploadWindow.enabled) return { status: 'DISABLED', text: 'Upload Window Off' };
     const end = new Date(uploadWindow.endTime).getTime();
@@ -109,7 +105,6 @@ export default function SupervisorDashboard() {
     };
   };
 
-  // Paper Release Countdown calculation
   const getPaperReleaseCountdown = () => {
     if (paperReleaseWindow.mode === 'EMERGENCY_LOCKED' || paperReleaseWindow.lockedBySupervisor) {
       return { status: 'EMERGENCY_LOCKED', text: 'Papers Locked' };
@@ -181,7 +176,6 @@ export default function SupervisorDashboard() {
     triggerNotify(`Paper release mode: ${mode}`);
   };
 
-  // Paper Generation Handler
   const handleGenerateAIPaper = () => {
     const targetSub = selectedGenSubject || uniqueSubjects[0] || 'Computer Security & Cryptography';
     const availableForSubject = questions.filter(
@@ -202,7 +196,6 @@ export default function SupervisorDashboard() {
     triggerNotify(`Paper ${createdPaper.paperCode} generated with ${createdPaper.questions.length} question(s).`);
   };
 
-  // Add User Submit Handler
   const handleAddUserSubmit = (e) => {
     e.preventDefault();
     if (!newUserForm.name.trim()) return;
@@ -212,7 +205,6 @@ export default function SupervisorDashboard() {
     setShowUserModal(false);
   };
 
-  // Filtered Lists
   const filteredAdminChanges = adminChanges.filter((item) => {
     if (!adminSearch.trim()) return true;
     const q = adminSearch.toLowerCase();
@@ -263,7 +255,6 @@ export default function SupervisorDashboard() {
 
   return (
     <div className="dashboard-layout">
-      {/* Sidebar Navigation */}
       <aside className="sidebar-nav">
         <div className="nav-section-label" style={{ color: '#f43f5e', fontWeight: 800 }}>
           AUTHORITY
@@ -289,9 +280,7 @@ export default function SupervisorDashboard() {
         })}
       </aside>
 
-      {/* Main Content Area */}
       <main className="content-viewport">
-        {/* Toast Notification */}
         {notification && (
           <div
             style={{
@@ -359,7 +348,6 @@ export default function SupervisorDashboard() {
 
 
 
-            {/* PANEL 1: Question Upload Lock */}
             <div
               className="glass-panel"
               style={{
@@ -426,7 +414,6 @@ export default function SupervisorDashboard() {
               </div>
             </div>
 
-            {/* PANEL 2: Question Paper Release Lock */}
             <div
               className="glass-panel"
               style={{
@@ -506,7 +493,6 @@ export default function SupervisorDashboard() {
               </div>
             </div>
 
-            {/* Quick Overview Summary Grid */}
             <div className="stats-grid">
               <div className="glass-panel stat-card" onClick={() => setActiveTab('admin-verify')} style={{ cursor: 'pointer' }}>
                 <div>
@@ -638,7 +624,7 @@ export default function SupervisorDashboard() {
 
 
 
-        {/* 5. USER MANAGEMENT */}
+        {/* 4. USER MANAGEMENT */}
         {activeTab === 'users' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -701,7 +687,6 @@ export default function SupervisorDashboard() {
               </div>
             </div>
 
-            {/* Add User Modal */}
             <Modal isOpen={showUserModal} onClose={() => setShowUserModal(false)} title="Add System User">
               <form onSubmit={handleAddUserSubmit}>
                 <div className="form-group">
@@ -751,7 +736,7 @@ export default function SupervisorDashboard() {
           </div>
         )}
 
-        {/* 6. VERIFY ADMIN CHANGES */}
+        {/* 5. VERIFY ADMIN CHANGES */}
         {activeTab === 'admin-verify' && (
           <div>
             <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
@@ -770,7 +755,6 @@ export default function SupervisorDashboard() {
               </button>
             </div>
 
-            {/* Search Bar */}
             <div className="glass-panel" style={{ padding: '10px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: 10 }}>
               <Search size={15} style={{ color: 'var(--text-muted)' }} />
               <input
@@ -788,7 +772,6 @@ export default function SupervisorDashboard() {
               )}
             </div>
 
-            {/* Table */}
             <div className="glass-panel" style={{ padding: '16px' }}>
               <div className="table-container">
                 {filteredAdminChanges.length === 0 ? (
@@ -867,7 +850,7 @@ export default function SupervisorDashboard() {
           </div>
         )}
 
-        {/* 7. STUDENT SUBMISSIONS */}
+        {/* 6. STUDENT ACTION IMMUTABLE LEDGER */}
         {activeTab === 'student-immutable' && (
           <div>
             <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
@@ -886,7 +869,6 @@ export default function SupervisorDashboard() {
               </button>
             </div>
 
-            {/* Search Bar */}
             <div className="glass-panel" style={{ padding: '10px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: 10 }}>
               <Search size={15} style={{ color: 'var(--text-muted)' }} />
               <input
@@ -904,7 +886,6 @@ export default function SupervisorDashboard() {
               )}
             </div>
 
-            {/* Table */}
             <div className="glass-panel" style={{ padding: '16px' }}>
               <div className="table-container">
                 {filteredStudentActions.length === 0 ? (
@@ -982,14 +963,13 @@ export default function SupervisorDashboard() {
           </div>
         )}
 
-        {/* 8. AUDIT LOGS */}
+        {/* 7. AUDIT LOGS */}
         {activeTab === 'audit-logs' && (
           <div>
             <div style={{ marginBottom: '16px' }}>
               <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Audit Logs</h2>
             </div>
 
-            {/* Search Bar */}
             <div className="glass-panel" style={{ padding: '10px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: 10 }}>
               <Search size={15} style={{ color: 'var(--text-muted)' }} />
               <input
@@ -1051,7 +1031,6 @@ export default function SupervisorDashboard() {
         )}
       </main>
 
-      {/* Admin Change Detail Inspection Modal */}
       <Modal
         isOpen={!!selectedAdminChange}
         onClose={() => setSelectedAdminChange(null)}
@@ -1115,7 +1094,6 @@ export default function SupervisorDashboard() {
         )}
       </Modal>
 
-      {/* Student Action Detail Inspection Modal */}
       <Modal
         isOpen={!!selectedStudentAction}
         onClose={() => setSelectedStudentAction(null)}
@@ -1177,7 +1155,6 @@ export default function SupervisorDashboard() {
         )}
       </Modal>
 
-      {/* Question Inspection Modal */}
       <Modal
         isOpen={!!selectedQuestion}
         onClose={() => setSelectedQuestion(null)}

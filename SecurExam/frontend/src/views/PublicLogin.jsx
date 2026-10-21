@@ -16,44 +16,33 @@ export default function PublicLogin() {
       return;
     }
 
-    // Role mapping based on User ID
-    // 1. ADM- / SUP- maps to Admin Authority (Supervisor Role)
+    // Role Categorization
     if (cleanId.includes('ADM') || cleanId.includes('ADMIN') || cleanId.includes('SUP') || cleanId.includes('SUPERVISOR')) {
       setError('');
       login('Supervisor', `${cleanId.toLowerCase()}@authority.gov.in`, {
         name: `Admin Authority (${cleanId})`,
         supervisorId: cleanId
       });
-    }
-    // 2. STA- / STF- maps to Staff Member (Admin Role)
-    else if (cleanId.includes('STA') || cleanId.includes('STF') || cleanId.includes('STAFF')) {
+    } else if (cleanId.includes('STA') || cleanId.includes('STF') || cleanId.includes('STAFF')) {
       setError('');
       login('Admin', `${cleanId.toLowerCase()}@authority.gov.in`, {
         name: `Staff Member (${cleanId})`,
         adminId: cleanId
       });
-    }
-    // 3. CEN- / CENTER maps to Exam Center
-    else if (cleanId.includes('CEN') || cleanId.includes('CTR') || cleanId.includes('CENTER')) {
+    } else if (cleanId.includes('CEN') || cleanId.includes('CTR') || cleanId.includes('CENTER')) {
       setError('');
       login('Center', `${cleanId.toLowerCase()}@exam-centers.gov.in`, {
         name: `Exam Center (${cleanId})`,
         centerId: cleanId
       });
-    }
-    // 4. STD- Candidate Notice
-    else if (cleanId.includes('STD') || cleanId.startsWith('ROLL') || cleanId.startsWith('STUDENT')) {
+    } else if (cleanId.includes('STD') || cleanId.startsWith('ROLL') || cleanId.startsWith('STUDENT')) {
       setError('Student logins must be accessed through an Authorized Examination Center.');
-    }
-    // 5. Scrutiny Officer
-    else if (cleanId.includes('SCR') || cleanId.includes('SCRUTINY')) {
+    } else if (cleanId.includes('SCR') || cleanId.includes('SCRUTINY')) {
       setError('');
       login('Scrutiny Officer', `${cleanId.toLowerCase()}@authority.gov.in`, {
         name: `Scrutiny Officer (${cleanId})`
       });
-    }
-    // 6. Auditor
-    else if (cleanId.includes('AUD') || cleanId.includes('AUDITOR')) {
+    } else if (cleanId.includes('AUD') || cleanId.includes('AUDITOR')) {
       setError('');
       login('Auditor', `${cleanId.toLowerCase()}@authority.gov.in`, {
         name: `Auditor (${cleanId})`
@@ -63,6 +52,7 @@ export default function PublicLogin() {
     }
   };
 
+  // 1. PUBLIC LOGIN
   return (
     <div
       style={{

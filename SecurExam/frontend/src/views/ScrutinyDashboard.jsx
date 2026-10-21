@@ -23,7 +23,6 @@ export default function ScrutinyDashboard() {
     }
   }, [questions, activeQuestion]);
 
-  // Editable version state for the currently active question
   const [editedText, setEditedText] = useState(activeQuestion?.questionText || '');
   const [editedAnswer, setEditedAnswer] = useState(activeQuestion?.answer || '');
   const [editedBloom, setEditedBloom] = useState(activeQuestion?.bloomLevel || 'Apply');
@@ -38,7 +37,6 @@ export default function ScrutinyDashboard() {
     }
   }, [activeQuestion]);
 
-  // Verification Checklist State (Defaults to false for honest audit)
   const [checklist, setChecklist] = useState({
     grammar: false,
     duplication: false,
@@ -52,7 +50,6 @@ export default function ScrutinyDashboard() {
 
   const handleSelectQuestion = (q) => {
     setActiveQuestion(q);
-    // Reset checklist on selection
     setChecklist({
       grammar: false,
       duplication: false,
@@ -107,12 +104,10 @@ export default function ScrutinyDashboard() {
   return (
     <div className="dashboard-layout" style={{ minHeight: 'calc(100vh - 94px)' }}>
       <main className="content-viewport" style={{ width: '100%' }}>
-        {/* Header Title */}
         <div style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Question Scrutiny</h2>
         </div>
 
-        {/* Floating Notification */}
         {notification && (
           <div
             style={{
@@ -135,7 +130,7 @@ export default function ScrutinyDashboard() {
           </div>
         )}
 
-        {/* Visual Pipeline Progression Header */}
+        {/* 1. REVIEW PIPELINE & QUEUE */}
         <div className="glass-panel" style={{ padding: '16px 20px', marginBottom: '20px' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '10px', fontWeight: 700 }}>
             Review Stages
@@ -197,9 +192,7 @@ export default function ScrutinyDashboard() {
           </div>
         </div>
 
-        {/* Main Review Workspace */}
         <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '20px' }}>
-          {/* Pending Queue List */}
           <div className="glass-panel" style={{ padding: '16px' }}>
             <h3 style={{ fontSize: '0.95rem', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>Review Queue</span>
@@ -250,10 +243,9 @@ export default function ScrutinyDashboard() {
             )}
           </div>
 
-          {/* Active Side-by-Side Review Section */}
+          {/* 2. QUESTION SCRUTINY WORKSPACE */}
           {activeQuestion ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {/* Question Metadata Header */}
               <div className="glass-panel" style={{ padding: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -281,9 +273,7 @@ export default function ScrutinyDashboard() {
                 </div>
               </div>
 
-              {/* Side-by-Side View */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                {/* Left: Original Submitted Question */}
                 <div className="glass-panel" style={{ padding: '20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '14px', borderBottom: '1px solid var(--border-light)', paddingBottom: '10px' }}>
                     <Eye size={16} style={{ color: '#94a3b8' }} />
@@ -310,7 +300,6 @@ export default function ScrutinyDashboard() {
                   </div>
                 </div>
 
-                {/* Right: Editable Scrutiny Version */}
                 <div className="glass-panel" style={{ padding: '20px', border: '1px solid rgba(0, 120, 212, 0.3)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '14px', borderBottom: '1px solid var(--border-light)', paddingBottom: '10px' }}>
                     <Edit3 size={16} style={{ color: '#38bdf8' }} />
@@ -361,7 +350,6 @@ export default function ScrutinyDashboard() {
                 </div>
               </div>
 
-              {/* Scrutiny Checklists & Verification Checklist */}
               <div className="glass-panel" style={{ padding: '20px' }}>
                 <h4 style={{ fontSize: '0.92rem', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <ListChecks size={18} style={{ color: '#10b981' }} />
