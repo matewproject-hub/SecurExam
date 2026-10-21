@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, KeyRound, Mail, UserCheck, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Lock, KeyRound, Mail, UserCheck, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function SecureLogin() {
@@ -19,7 +19,20 @@ export default function SecureLogin() {
       setError('Please provide valid credentials.');
       return;
     }
-    login(role, email);
+
+    const extraData = {};
+    if (role === 'Center') {
+      extraData.centerId = 'CEN-101';
+      extraData.name = 'Exam Center (CEN-101)';
+    } else if (role === 'Supervisor') {
+      extraData.supervisorId = 'ADM-101';
+      extraData.name = 'Admin Authority (ADM-101)';
+    } else if (role === 'Admin') {
+      extraData.adminId = 'STA-101';
+      extraData.name = 'Staff Member (STA-101)';
+    }
+
+    login(role, email, extraData);
   };
 
   return (
@@ -36,7 +49,7 @@ export default function SecureLogin() {
         className="glass-panel"
         style={{
           width: '100%',
-          maxWidth: '480px',
+          maxWidth: '440px',
           padding: '36px',
           border: '1px solid rgba(220, 38, 38, 0.3)',
           background: 'rgba(15, 23, 42, 0.85)'
@@ -45,59 +58,26 @@ export default function SecureLogin() {
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div
             style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '14px',
+              width: '52px',
+              height: '52px',
+              borderRadius: '12px',
               background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              marginBottom: '14px',
+              marginBottom: '12px',
               boxShadow: '0 0 20px rgba(220, 38, 38, 0.4)'
             }}
           >
-            <Lock size={28} />
+            <Lock size={26} />
           </div>
-          <h2 style={{ fontSize: '1.4rem', color: 'var(--text-main)', marginBottom: '4px' }}>
-            Authority Staff Access Gateway
+          <h1 style={{ fontSize: '1.45rem', fontWeight: 700, margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>
+            SecurExam
+          </h1>
+          <h2 style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--text-muted)', margin: 0 }}>
+            Login
           </h2>
-          <div
-            style={{
-              fontSize: '0.72rem',
-              color: '#ef4444',
-              fontFamily: 'var(--font-mono)',
-              letterSpacing: '1px',
-              textTransform: 'uppercase',
-              fontWeight: 700
-            }}
-          >
-            HIGH-SECURITY AUTHORIZED PORTAL ONLY
-          </div>
-        </div>
-
-        {/* RESTRICTED WARNING BANNER */}
-        <div
-          style={{
-            background: 'rgba(220, 38, 38, 0.12)',
-            border: '1px solid rgba(220, 38, 38, 0.4)',
-            borderRadius: '8px',
-            padding: '12px 14px',
-            fontSize: '0.78rem',
-            color: '#fca5a5',
-            marginBottom: '24px',
-            display: 'flex',
-            gap: '10px',
-            alignItems: 'flex-start'
-          }}
-        >
-          <AlertTriangle size={18} style={{ color: '#ef4444', flexShrink: 0, marginTop: '2px' }} />
-          <div>
-            <strong style={{ color: '#ffffff', display: 'block', marginBottom: '2px' }}>
-              RESTRICTED GOVERNMENT PORTAL
-            </strong>
-            This area is strictly reserved for authorized examination staff. All unauthorized login attempts are logged with client IP address, device fingerprints, and submitted to cyber security auditing.
-          </div>
         </div>
 
         {error && (
@@ -106,7 +86,7 @@ export default function SecureLogin() {
               background: 'rgba(220, 38, 38, 0.2)',
               border: '1px solid #ef4444',
               color: '#ffffff',
-              padding: '10px',
+              padding: '10px 14px',
               borderRadius: '6px',
               fontSize: '0.8rem',
               marginBottom: '16px'
@@ -120,11 +100,12 @@ export default function SecureLogin() {
           <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <UserCheck size={14} />
-              <span>Select Authorized Staff Role</span>
+              <span>Role</span>
             </label>
             <select className="form-select" value={role} onChange={handleRoleChange} style={{ fontWeight: 600 }}>
-              <option value="Supervisor">Chief Supervisor (Authority)</option>
-              <option value="Admin">Administrator</option>
+              <option value="Supervisor">Admin Authority (ADM)</option>
+              <option value="Admin">Staff Member (STA)</option>
+              <option value="Center">Examination Center (CEN)</option>
               <option value="Scrutiny Officer">Scrutiny Officer</option>
               <option value="Auditor">Auditor</option>
             </select>
@@ -133,27 +114,27 @@ export default function SecureLogin() {
           <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Mail size={14} />
-              <span>Official Government Email</span>
+              <span>Email</span>
             </label>
             <input
               type="email"
               className="form-control"
-              placeholder="e.g. officer@authority.gov.in"
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: '24px' }}>
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <KeyRound size={14} />
-              <span>Secure Authentication Password</span>
+              <span>Password</span>
             </label>
             <input
               type="password"
               className="form-control"
-              placeholder="Enter password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -170,14 +151,10 @@ export default function SecureLogin() {
               background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'
             }}
           >
-            <span>Authenticate & Access Console</span>
+            <span>Sign In</span>
             <ArrowRight size={16} />
           </button>
         </form>
-
-        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-dim)' }}>
-          Session Monitoring: Active • Official Staff Portal
-        </div>
       </div>
     </div>
   );

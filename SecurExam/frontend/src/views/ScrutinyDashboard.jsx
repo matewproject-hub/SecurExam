@@ -108,11 +108,8 @@ export default function ScrutinyDashboard() {
     <div className="dashboard-layout" style={{ minHeight: 'calc(100vh - 94px)' }}>
       <main className="content-viewport" style={{ width: '100%' }}>
         {/* Header Title */}
-        <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.4rem' }}>Scrutiny Officer Review Portal</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Multi-stage question validation, grammar audit, Bloom's Taxonomy check, and solution verification.
-          </p>
+        <div style={{ marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Question Scrutiny</h2>
         </div>
 
         {/* Floating Notification */}
@@ -139,26 +136,26 @@ export default function ScrutinyDashboard() {
         )}
 
         {/* Visual Pipeline Progression Header */}
-        <div className="glass-panel" style={{ padding: '20px', marginBottom: '24px' }}>
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '12px', fontWeight: 700 }}>
-            3-Tier Scrutiny Progression Workflow
+        <div className="glass-panel" style={{ padding: '16px 20px', marginBottom: '20px' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '10px', fontWeight: 700 }}>
+            Review Stages
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
             <div
               style={{
                 background: 'rgba(59, 130, 246, 0.1)',
                 border: '1px solid rgba(59, 130, 246, 0.3)',
-                padding: '14px',
+                padding: '12px 14px',
                 borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12
               }}
             >
-              <div style={{ background: '#3b82f6', color: 'white', padding: '8px', borderRadius: 6, fontWeight: 700 }}>R1</div>
+              <div style={{ background: '#3b82f6', color: 'white', padding: '6px 10px', borderRadius: 6, fontWeight: 700, fontSize: '0.85rem' }}>R1</div>
               <div>
-                <strong style={{ display: 'block', fontSize: '0.85rem', color: '#60a5fa' }}>Round 1: Grammar & Correctness</strong>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Linguistic audit & answer verification</span>
+                <strong style={{ display: 'block', fontSize: '0.84rem', color: '#60a5fa' }}>Round 1</strong>
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Grammar & Content</span>
               </div>
             </div>
 
@@ -166,17 +163,17 @@ export default function ScrutinyDashboard() {
               style={{
                 background: 'rgba(245, 158, 11, 0.1)',
                 border: '1px solid rgba(245, 158, 11, 0.3)',
-                padding: '14px',
+                padding: '12px 14px',
                 borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12
               }}
             >
-              <div style={{ background: '#f59e0b', color: 'white', padding: '8px', borderRadius: 6, fontWeight: 700 }}>R2</div>
+              <div style={{ background: '#f59e0b', color: 'white', padding: '6px 10px', borderRadius: 6, fontWeight: 700, fontSize: '0.85rem' }}>R2</div>
               <div>
-                <strong style={{ display: 'block', fontSize: '0.85rem', color: '#fbbf24' }}>Round 2: Duplication & Ambiguity</strong>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Plagiarism check & clarity review</span>
+                <strong style={{ display: 'block', fontSize: '0.84rem', color: '#fbbf24' }}>Round 2</strong>
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Clarity & Duplication</span>
               </div>
             </div>
 
@@ -184,28 +181,28 @@ export default function ScrutinyDashboard() {
               style={{
                 background: 'rgba(16, 185, 129, 0.1)',
                 border: '1px solid rgba(16, 185, 129, 0.3)',
-                padding: '14px',
+                padding: '12px 14px',
                 borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12
               }}
             >
-              <div style={{ background: '#10b981', color: 'white', padding: '8px', borderRadius: 6, fontWeight: 700 }}>R3</div>
+              <div style={{ background: '#10b981', color: 'white', padding: '6px 10px', borderRadius: 6, fontWeight: 700, fontSize: '0.85rem' }}>R3</div>
               <div>
-                <strong style={{ display: 'block', fontSize: '0.85rem', color: '#34d399' }}>Round 3: Bloom's & Syllabus Alignment</strong>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Final chief examiner authorization</span>
+                <strong style={{ display: 'block', fontSize: '0.84rem', color: '#34d399' }}>Round 3</strong>
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Syllabus & Taxonomy</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Main Review Workspace */}
-        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '20px' }}>
           {/* Pending Queue List */}
           <div className="glass-panel" style={{ padding: '16px' }}>
             <h3 style={{ fontSize: '0.95rem', marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Assigned Review Queue</span>
+              <span>Review Queue</span>
               <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: 4, background: 'rgba(0, 120, 212, 0.2)', color: '#38bdf8' }}>
                 {questions.length} Items
               </span>

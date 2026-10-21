@@ -326,10 +326,10 @@ export function DataProvider({ children }) {
 
   // Paper generation operation
   const generatePaper = (paperData) => {
-    const approvedQs = questions.filter((q) => q.status === 'Approved');
-    const selectedQs = paperData.subject
-      ? approvedQs.filter((q) => q.subject === paperData.subject)
-      : approvedQs;
+    const candidateQs = paperData.subject
+      ? questions.filter((q) => q.subject === paperData.subject)
+      : questions;
+    const selectedQs = candidateQs.length > 0 ? candidateQs : questions;
 
     const totalCalculatedMarks = selectedQs.reduce((sum, q) => sum + (Number(q.marks) || 0), 0);
 

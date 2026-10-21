@@ -9,9 +9,9 @@ export default function Header() {
     if (!userObj) return null;
     switch (userObj.role) {
       case 'Supervisor':
-        return { label: 'Chief Supervisor (Authority)', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.15)' };
+        return { label: 'Admin (Authority)', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.15)' };
       case 'Admin':
-        return { label: 'Administrator', color: '#0284c7', bg: 'rgba(2, 132, 199, 0.1)' };
+        return { label: 'Staff', color: '#0284c7', bg: 'rgba(2, 132, 199, 0.1)' };
       case 'Scrutiny Officer':
         return { label: 'Scrutiny Officer', color: '#d97706', bg: 'rgba(217, 119, 6, 0.1)' };
       case 'Auditor':

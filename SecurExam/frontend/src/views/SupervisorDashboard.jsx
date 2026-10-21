@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ShieldAlert,
-  Clock,
   Lock,
-  Unlock,
   Users,
   CheckSquare,
-  FileCheck,
   Link2,
   ShieldCheck,
   Eye,
@@ -16,7 +12,10 @@ import {
   FileLock2,
   BadgeCheck,
   Cpu,
-  Search
+  Search,
+  Sparkles,
+  PlusCircle,
+  Trash2
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -25,22 +24,22 @@ import Modal from '../components/Modal';
 export default function SupervisorDashboard() {
   const {
     questions,
-    generatedPapers,
     auditLogs,
     users,
     uploadWindow,
     setUploadWindow,
-    isUploadAllowed,
     paperReleaseWindow,
     setPaperReleaseWindow,
-    isPaperReleaseAllowed,
     adminChanges,
     verifyAdminChange,
     verifyAllAdminChanges,
     studentActions,
     verifyStudentAction,
     verifyAllStudentActions,
-    addAuditLog
+    addAuditLog,
+    generatePaper,
+    addUser,
+    deleteUser
   } = useData();
   const { user } = useAuth();
 
@@ -53,6 +52,14 @@ export default function SupervisorDashboard() {
   const [studentSearch, setStudentSearch] = useState('');
   const [auditSearch, setAuditSearch] = useState('');
   const [notification, setNotification] = useState('');
+
+  // AI Paper Gen State
+  const uniqueSubjects = Array.from(new Set(questions.map((q) => q.subject))).filter(Boolean);
+  const [selectedGenSubject, setSelectedGenSubject] = useState(uniqueSubjects[0] || '');
+
+  // User Management State
+  const [newUserForm, setNewUserForm] = useState({ name: '', role: 'Scrutiny Officer (Level 1)', clearance: 'Tier 2 Scrutiny' });
+  const [showUserModal, setShowUserModal] = useState(false);
 
   // Live Clock Tick
   const [nowTime, setNowTime] = useState(new Date());
@@ -68,9 +75,6 @@ export default function SupervisorDashboard() {
     setNotification(msg);
     setTimeout(() => setNotification(''), 4000);
   };
-
-  const uploadCheck = isUploadAllowed();
-  const paperReleaseCheck = isPaperReleaseAllowed();
 
   const formatDT = (d) => {
     const pad = (n) => String(n).padStart(2, '0');
@@ -143,45 +147,7 @@ export default function SupervisorDashboard() {
   const uploadCountdown = getUploadCountdown();
   const paperReleaseCountdown = getPaperReleaseCountdown();
 
-  // Presets Handlers
-  const handlePresetOpenUploadWindow = () => {
-    const now = new Date();
-    const start = new Date(now.getTime() - 2 * 60 * 1000);
-    const end = new Date(now.getTime() + 120 * 60 * 1000);
-    setUploadWindow({
-      enabled: true,
-      startTime: formatDT(start),
-      endTime: formatDT(end)
-    });
-    addAuditLog('SUPERVISOR_PRESET_OPEN_UPLOAD_2HRS', user?.name || 'Chief Supervisor', 'Chief Supervisor', '2_HOURS', null);
-    triggerNotify('Upload window opened for 2 hours.');
-  };
 
-  const handlePresetReleasePapers = () => {
-    setPaperReleaseWindow((prev) => ({
-      ...prev,
-      enabled: true,
-      mode: 'EMERGENCY_UNLOCKED',
-      lockedBySupervisor: false
-    }));
-    addAuditLog('SUPERVISOR_PRESET_RELEASE_PAPERS', user?.name || 'Chief Supervisor', 'Chief Supervisor', 'UNLOCKED', null);
-    triggerNotify('Exam paper decryption unlocked for all centers.');
-  };
-
-  const handlePresetFullLockdown = () => {
-    const now = new Date();
-    setUploadWindow((prev) => ({
-      ...prev,
-      endTime: formatDT(now)
-    }));
-    setPaperReleaseWindow((prev) => ({
-      ...prev,
-      mode: 'EMERGENCY_LOCKED',
-      lockedBySupervisor: true
-    }));
-    addAuditLog('SUPERVISOR_PRESET_FULL_LOCKDOWN', user?.name || 'Chief Supervisor', 'Chief Supervisor', 'EMERGENCY_LOCKDOWN', null);
-    triggerNotify('Emergency lockdown activated.');
-  };
 
   const handleExtendUploadWindow = (minutes) => {
     const currentEnd = new Date(uploadWindow.endTime);
@@ -192,7 +158,7 @@ export default function SupervisorDashboard() {
       enabled: true,
       endTime: formatDT(newEnd)
     }));
-    addAuditLog('SUPERVISOR_EXTENDED_UPLOAD_WINDOW', user?.name || 'Chief Supervisor', 'Chief Supervisor', `+${minutes}m`, null);
+    addAuditLog('SUPERVISOR_EXTENDED_UPLOAD_WINDOW', user?.name || 'Admin Authority', 'Admin Authority', `+${minutes}m`, null);
     triggerNotify(`Upload window extended by ${minutes}m.`);
   };
 
@@ -201,7 +167,7 @@ export default function SupervisorDashboard() {
       ...prev,
       endTime: formatDT(new Date())
     }));
-    addAuditLog('SUPERVISOR_LOCKED_UPLOAD_WINDOW', user?.name || 'Chief Supervisor', 'Chief Supervisor', 'IMMEDIATE_LOCK', null);
+    addAuditLog('SUPERVISOR_LOCKED_UPLOAD_WINDOW', user?.name || 'Admin Authority', 'Admin Authority', 'IMMEDIATE_LOCK', null);
     triggerNotify('Upload window locked.');
   };
 
@@ -211,8 +177,39 @@ export default function SupervisorDashboard() {
       mode: mode,
       lockedBySupervisor: mode === 'EMERGENCY_LOCKED'
     }));
-    addAuditLog('SUPERVISOR_SET_PAPER_RELEASE_MODE', user?.name || 'Chief Supervisor', 'Chief Supervisor', mode, null);
+    addAuditLog('SUPERVISOR_SET_PAPER_RELEASE_MODE', user?.name || 'Admin Authority', 'Admin Authority', mode, null);
     triggerNotify(`Paper release mode: ${mode}`);
+  };
+
+  // Paper Generation Handler
+  const handleGenerateAIPaper = () => {
+    const targetSub = selectedGenSubject || uniqueSubjects[0] || 'Computer Security & Cryptography';
+    const availableForSubject = questions.filter(
+      (q) => q.subject === targetSub || !targetSub
+    );
+
+    if (availableForSubject.length === 0) {
+      triggerNotify(`No questions available for "${targetSub}". Please add questions first.`);
+      return;
+    }
+
+    const createdPaper = generatePaper({
+      title: `${targetSub} Examination Paper`,
+      subject: targetSub,
+      userName: user?.name || 'Admin Authority'
+    });
+
+    triggerNotify(`Paper ${createdPaper.paperCode} generated with ${createdPaper.questions.length} question(s).`);
+  };
+
+  // Add User Submit Handler
+  const handleAddUserSubmit = (e) => {
+    e.preventDefault();
+    if (!newUserForm.name.trim()) return;
+    const added = addUser(newUserForm, user?.name || 'Admin Authority');
+    triggerNotify(`New User ${added.name} (${added.id}) created successfully!`);
+    setNewUserForm({ name: '', role: 'Scrutiny Officer (Level 1)', clearance: 'Tier 2 Scrutiny' });
+    setShowUserModal(false);
   };
 
   // Filtered Lists
@@ -252,14 +249,16 @@ export default function SupervisorDashboard() {
   });
 
   const pendingAdminChangesCount = adminChanges.filter((a) => a.status === 'PENDING_VERIFICATION').length;
-  const verifiedAdminChangesCount = adminChanges.filter((a) => a.status === 'VERIFIED_BY_SUPERVISOR').length;
   const unverifiedStudentActionsCount = studentActions.filter((s) => !s.immutableVerified).length;
 
   const navItems = [
-    { id: 'lock-controls', label: 'Time Locks & Controls', icon: Lock },
-    { id: 'admin-verify', label: `Verify Admin (${pendingAdminChangesCount})`, icon: BadgeCheck },
-    { id: 'student-immutable', label: `Student Ledger (${unverifiedStudentActionsCount})`, icon: ShieldCheck },
-    { id: 'audit-logs', label: 'Audit Trail', icon: Link2 }
+    { id: 'lock-controls', label: 'Schedule & Controls', icon: Lock },
+    { id: 'scrutiny-mgt', label: 'Scrutiny Management', icon: CheckSquare },
+    { id: 'ai-gen', label: 'Paper Generation', icon: Sparkles },
+    { id: 'users', label: 'User Management', icon: Users },
+    { id: 'admin-verify', label: `Admin Changes (${pendingAdminChangesCount})`, icon: BadgeCheck },
+    { id: 'student-immutable', label: `Student Submissions (${unverifiedStudentActionsCount})`, icon: ShieldCheck },
+    { id: 'audit-logs', label: 'Audit Logs', icon: Link2 }
   ];
 
   return (
@@ -267,7 +266,7 @@ export default function SupervisorDashboard() {
       {/* Sidebar Navigation */}
       <aside className="sidebar-nav">
         <div className="nav-section-label" style={{ color: '#f43f5e', fontWeight: 800 }}>
-          CHIEF SUPERVISOR
+          AUTHORITY
         </div>
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -317,7 +316,7 @@ export default function SupervisorDashboard() {
         {activeTab === 'lock-controls' && (
           <div>
             <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-              <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Supervisor Master Lock Controls</h2>
+              <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Schedule Controls</h2>
 
               <div style={{ display: 'flex', gap: '10px' }}>
                 <div
@@ -358,45 +357,7 @@ export default function SupervisorDashboard() {
               </div>
             </div>
 
-            {/* Quick Actions Presets Bar */}
-            <div
-              className="glass-panel"
-              style={{
-                padding: '14px 18px',
-                marginBottom: '20px',
-                border: '1px solid rgba(244, 63, 94, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: 10
-              }}
-            >
-              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fda4af' }}>Quick Actions:</span>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <button
-                  className="btn btn-secondary"
-                  onClick={handlePresetOpenUploadWindow}
-                  style={{ fontSize: '0.78rem', padding: '5px 11px', borderColor: 'rgba(16, 185, 129, 0.4)', color: '#34d399' }}
-                >
-                  Open Upload 2 Hours
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={handlePresetReleasePapers}
-                  style={{ fontSize: '0.78rem', padding: '5px 11px', borderColor: 'rgba(56, 189, 248, 0.4)', color: '#38bdf8' }}
-                >
-                  Unlock Papers
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={handlePresetFullLockdown}
-                  style={{ fontSize: '0.78rem', padding: '5px 11px', background: '#dc2626' }}
-                >
-                  Emergency Lock
-                </button>
-              </div>
-            </div>
+
 
             {/* PANEL 1: Question Upload Lock */}
             <div
@@ -419,7 +380,7 @@ export default function SupervisorDashboard() {
                     checked={uploadWindow.enabled}
                     onChange={(e) => {
                       setUploadWindow((prev) => ({ ...prev, enabled: e.target.checked }));
-                      addAuditLog('SUPERVISOR_TOGGLED_UPLOAD_POLICY', user?.name || 'Chief Supervisor', 'Chief Supervisor', e.target.checked ? 'ENABLED' : 'DISABLED', null);
+                      addAuditLog('SUPERVISOR_TOGGLED_UPLOAD_POLICY', user?.name || 'Admin Authority', 'Admin Authority', e.target.checked ? 'ENABLED' : 'DISABLED', null);
                       triggerNotify(e.target.checked ? 'Upload policy enabled.' : 'Upload policy disabled.');
                     }}
                   />
@@ -563,14 +524,6 @@ export default function SupervisorDashboard() {
                 <Cpu size={24} style={{ color: '#38bdf8', opacity: 0.8 }} />
               </div>
 
-              <div className="glass-panel stat-card">
-                <div>
-                  <div className="stat-title">Generated Papers</div>
-                  <div className="stat-value">{generatedPapers.length}</div>
-                </div>
-                <FileCheck size={24} style={{ color: '#10b981', opacity: 0.8 }} />
-              </div>
-
               <div className="glass-panel stat-card" onClick={() => setActiveTab('audit-logs')} style={{ cursor: 'pointer' }}>
                 <div>
                   <div className="stat-title">Audit Log Trail</div>
@@ -582,7 +535,223 @@ export default function SupervisorDashboard() {
           </div>
         )}
 
-        {/* 2. VERIFY ADMIN CHANGES */}
+        {/* 2. SCRUTINY MANAGEMENT */}
+        {activeTab === 'scrutiny-mgt' && (
+          <div>
+            <div style={{ marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Scrutiny Management</h2>
+            </div>
+
+            <div className="glass-panel" style={{ padding: '20px' }}>
+              <h3 style={{ fontSize: '1rem', marginBottom: '14px' }}>Review Queue</h3>
+              <div className="table-container">
+                {questions.length === 0 ? (
+                  <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    No questions currently undergoing scrutiny.
+                  </div>
+                ) : (
+                  <table className="custom-table">
+                    <thead>
+                      <tr>
+                        <th>Question ID</th>
+                        <th>Subject</th>
+                        <th>Current Round</th>
+                        <th>Submitted By</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {questions.map((q) => (
+                        <tr key={q.id}>
+                          <td style={{ fontFamily: 'var(--font-mono)', color: '#38bdf8' }}>{q.id}</td>
+                          <td>{q.subject}</td>
+                          <td>
+                            <span className={`round-pill round-${q.round || 1}`}>Round {q.round || 1}</span>
+                          </td>
+                          <td>{q.submittedBy}</td>
+                          <td>
+                            <button
+                              className="btn btn-secondary"
+                              onClick={() => setSelectedQuestion(q)}
+                              style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                            >
+                              View Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 3. PAPER GENERATION */}
+        {activeTab === 'ai-gen' && (
+          <div>
+            <div style={{ marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Paper Generation</h2>
+            </div>
+
+            <div className="glass-panel" style={{ padding: '24px', maxWidth: '640px' }}>
+              <div className="form-group">
+                <label className="form-label">Subject</label>
+                {uniqueSubjects.length > 0 ? (
+                  <select
+                    className="form-select"
+                    value={selectedGenSubject}
+                    onChange={(e) => setSelectedGenSubject(e.target.value)}
+                  >
+                    {uniqueSubjects.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Subject name"
+                    value={selectedGenSubject}
+                    onChange={(e) => setSelectedGenSubject(e.target.value)}
+                  />
+                )}
+              </div>
+
+              <div style={{ background: 'rgba(244, 63, 94, 0.08)', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '14px', borderRadius: '8px', marginBottom: '20px' }}>
+                <div style={{ fontSize: '0.84rem', color: 'var(--text-main)' }}>
+                  Questions Available:{' '}
+                  <strong>
+                    {questions.filter((q) => q.subject === selectedGenSubject || !selectedGenSubject).length}
+                  </strong>
+                </div>
+              </div>
+
+              <button className="btn btn-primary" onClick={handleGenerateAIPaper} style={{ width: '100%', padding: '12px', fontSize: '0.95rem', background: '#f43f5e', borderColor: '#f43f5e' }}>
+                <Sparkles size={16} />
+                <span>Generate Question Paper</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+
+
+        {/* 5. USER MANAGEMENT */}
+        {activeTab === 'users' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <div>
+                <h2 style={{ fontSize: '1.4rem' }}>Role-Based User Management</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                  Manage Scrutiny Officers, Security Auditors, and System Users.
+                </p>
+              </div>
+              <button className="btn btn-primary" onClick={() => setShowUserModal(true)} style={{ background: '#f43f5e', borderColor: '#f43f5e' }}>
+                <PlusCircle size={16} />
+                <span>Add System User</span>
+              </button>
+            </div>
+
+            <div className="glass-panel" style={{ padding: '20px' }}>
+              <div className="table-container">
+                {users.length === 0 ? (
+                  <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    No additional system users added yet.
+                  </div>
+                ) : (
+                  <table className="custom-table">
+                    <thead>
+                      <tr>
+                        <th>User ID</th>
+                        <th>Name / Entity</th>
+                        <th>Assigned Role</th>
+                        <th>Security Clearance</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((u) => (
+                        <tr key={u.id}>
+                          <td style={{ fontFamily: 'var(--font-mono)' }}>{u.id}</td>
+                          <td>{u.name}</td>
+                          <td>{u.role}</td>
+                          <td>{u.clearance}</td>
+                          <td><span style={{ color: '#34d399', fontWeight: 600 }}>{u.status}</span></td>
+                          <td>
+                            <button
+                              className="btn btn-danger"
+                              onClick={() => {
+                                deleteUser(u.id, user?.name || 'Admin Authority');
+                                triggerNotify(`User ${u.name} removed.`);
+                              }}
+                              style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                            >
+                              <Trash2 size={13} />
+                              <span>Remove</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+
+            {/* Add User Modal */}
+            <Modal isOpen={showUserModal} onClose={() => setShowUserModal(false)} title="Add System User">
+              <form onSubmit={handleAddUserSubmit}>
+                <div className="form-group">
+                  <label className="form-label">User Full Name / Entity</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. Dr. Jane Doe"
+                    value={newUserForm.name}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Assigned Role</label>
+                  <select
+                    className="form-select"
+                    value={newUserForm.role}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
+                  >
+                    <option>Scrutiny Officer (Level 1)</option>
+                    <option>Scrutiny Officer (Level 2)</option>
+                    <option>Chief Examiner (Level 3)</option>
+                    <option>Auditor</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Security Clearance</label>
+                  <select
+                    className="form-select"
+                    value={newUserForm.clearance}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, clearance: e.target.value })}
+                  >
+                    <option>Tier 2 Scrutiny</option>
+                    <option>Tier 1 Security Audit</option>
+                    <option>Tier 3 Full Admin</option>
+                  </select>
+                </div>
+
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '10px', background: '#f43f5e', borderColor: '#f43f5e' }}>
+                  Create User Account
+                </button>
+              </form>
+            </Modal>
+          </div>
+        )}
+
+        {/* 6. VERIFY ADMIN CHANGES */}
         {activeTab === 'admin-verify' && (
           <div>
             <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
@@ -591,10 +760,10 @@ export default function SupervisorDashboard() {
               <button
                 className="btn btn-primary"
                 onClick={() => {
-                  verifyAllAdminChanges(user?.name || 'Chief Supervisor');
+                  verifyAllAdminChanges(user?.name || 'Admin Authority');
                   triggerNotify('All pending admin changes verified!');
                 }}
-                style={{ padding: '7px 14px', fontSize: '0.8rem' }}
+                style={{ padding: '7px 14px', fontSize: '0.8rem', background: '#f43f5e', borderColor: '#f43f5e' }}
               >
                 <BadgeCheck size={15} />
                 <span>Verify All Pending</span>
@@ -677,7 +846,7 @@ export default function SupervisorDashboard() {
                                   <button
                                     className="btn btn-secondary"
                                     onClick={() => {
-                                      const hash = verifyAdminChange(item.id, user?.name || 'Chief Supervisor');
+                                      verifyAdminChange(item.id, user?.name || 'Admin Authority');
                                       triggerNotify(`Admin change ${item.id} verified!`);
                                     }}
                                     style={{ padding: '3px 8px', fontSize: '0.72rem', color: '#fda4af', borderColor: 'rgba(244,63,94,0.4)' }}
@@ -698,22 +867,22 @@ export default function SupervisorDashboard() {
           </div>
         )}
 
-        {/* 3. IMMUTABLE STUDENT ACTIONS & VERIFICATION */}
+        {/* 7. STUDENT SUBMISSIONS */}
         {activeTab === 'student-immutable' && (
           <div>
             <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-              <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Student Action Ledger</h2>
+              <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Student Submissions</h2>
 
               <button
                 className="btn btn-primary"
                 onClick={() => {
-                  verifyAllStudentActions(user?.name || 'Chief Supervisor');
-                  triggerNotify('All student action blocks verified!');
+                  verifyAllStudentActions(user?.name || 'Admin Authority');
+                  triggerNotify('All student actions verified.');
                 }}
-                style={{ padding: '7px 14px', fontSize: '0.8rem' }}
+                style={{ padding: '7px 14px', fontSize: '0.8rem', background: '#f43f5e', borderColor: '#f43f5e' }}
               >
-                <Cpu size={15} />
-                <span>Verify Chain</span>
+                <CheckCircle2 size={15} />
+                <span>Verify All</span>
               </button>
             </div>
 
@@ -723,7 +892,7 @@ export default function SupervisorDashboard() {
               <input
                 type="text"
                 className="form-control"
-                placeholder="Search student action ledger..."
+                placeholder="Search student submissions..."
                 value={studentSearch}
                 onChange={(e) => setStudentSearch(e.target.value)}
                 style={{ background: 'transparent', border: 'none', padding: 0, fontSize: '0.84rem' }}
@@ -740,13 +909,13 @@ export default function SupervisorDashboard() {
               <div className="table-container">
                 {filteredStudentActions.length === 0 ? (
                   <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No matching student action blocks found.
+                    No matching student records found.
                   </div>
                 ) : (
                   <table className="custom-table">
                     <thead>
                       <tr>
-                        <th>Block #</th>
+                        <th>Record #</th>
                         <th>Roll Number</th>
                         <th>Event</th>
                         <th>Details</th>
@@ -793,7 +962,7 @@ export default function SupervisorDashboard() {
                                 <button
                                   className="btn btn-secondary"
                                   onClick={() => {
-                                    verifyStudentAction(act.id, user?.name || 'Chief Supervisor');
+                                    verifyStudentAction(act.id, user?.name || 'Admin Authority');
                                     triggerNotify(`Student Block #${act.blockIndex} verified!`);
                                   }}
                                   style={{ padding: '3px 8px', fontSize: '0.72rem' }}
@@ -813,11 +982,11 @@ export default function SupervisorDashboard() {
           </div>
         )}
 
-        {/* 4. SECURITY AUDIT LEDGER */}
+        {/* 8. AUDIT LOGS */}
         {activeTab === 'audit-logs' && (
           <div>
             <div style={{ marginBottom: '16px' }}>
-              <h2 style={{ fontSize: '1.3rem', margin: 0 }}>System Audit Ledger</h2>
+              <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Audit Logs</h2>
             </div>
 
             {/* Search Bar */}
@@ -929,7 +1098,7 @@ export default function SupervisorDashboard() {
               <button
                 className="btn btn-primary"
                 onClick={() => {
-                  const hash = verifyAdminChange(selectedAdminChange.id, user?.name || 'Chief Supervisor');
+                  const hash = verifyAdminChange(selectedAdminChange.id, user?.name || 'Admin Authority');
                   setSelectedAdminChange((prev) => ({
                     ...prev,
                     status: 'VERIFIED_BY_SUPERVISOR',
@@ -937,7 +1106,7 @@ export default function SupervisorDashboard() {
                   }));
                   triggerNotify(`Admin operation ${selectedAdminChange.id} verified!`);
                 }}
-                style={{ width: '100%', padding: '8px' }}
+                style={{ width: '100%', padding: '8px', background: '#f43f5e', borderColor: '#f43f5e' }}
               >
                 <span>Verify Change</span>
               </button>
@@ -992,18 +1161,59 @@ export default function SupervisorDashboard() {
               <button
                 className="btn btn-primary"
                 onClick={() => {
-                  verifyStudentAction(selectedStudentAction.id, user?.name || 'Chief Supervisor');
+                  verifyStudentAction(selectedStudentAction.id, user?.name || 'Admin Authority');
                   setSelectedStudentAction((prev) => ({
                     ...prev,
                     immutableVerified: true
                   }));
                   triggerNotify(`Student Block #${selectedStudentAction.blockIndex} verified!`);
                 }}
-                style={{ width: '100%', padding: '8px' }}
+                style={{ width: '100%', padding: '8px', background: '#f43f5e', borderColor: '#f43f5e' }}
               >
                 <span>Verify Block Hash</span>
               </button>
             )}
+          </div>
+        )}
+      </Modal>
+
+      {/* Question Inspection Modal */}
+      <Modal
+        isOpen={!!selectedQuestion}
+        onClose={() => setSelectedQuestion(null)}
+        title={`Question Details - ${selectedQuestion?.id}`}
+      >
+        {selectedQuestion && (
+          <div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div>
+                <strong style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Subject:</strong>
+                <div>{selectedQuestion.subject}</div>
+              </div>
+              <div>
+                <strong style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Difficulty & Marks:</strong>
+                <div>{selectedQuestion.difficulty} ({selectedQuestion.marks} Marks)</div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <strong style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Bloom's Taxonomy:</strong>
+              <div>{selectedQuestion.bloomLevel}</div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <strong style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Question Content:</strong>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '6px', marginTop: '4px' }}>
+                {selectedQuestion.questionText}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <strong style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Model Answer:</strong>
+              <div style={{ background: 'rgba(16,185,129,0.06)', padding: '12px', borderRadius: '6px', color: '#34d399', marginTop: '4px' }}>
+                {selectedQuestion.answer}
+              </div>
+            </div>
           </div>
         )}
       </Modal>

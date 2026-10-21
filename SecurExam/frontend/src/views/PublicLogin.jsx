@@ -8,7 +8,7 @@ export default function PublicLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleCredentialsSubmit = (e) => {
     e.preventDefault();
     const cleanId = userId.trim().toUpperCase();
     if (!cleanId || !password.trim()) {
@@ -16,44 +16,50 @@ export default function PublicLogin() {
       return;
     }
 
-    // Keyword-based routing determination
-    if (cleanId.includes('SUP') || cleanId.includes('AUTH') || cleanId.includes('SUPERVISOR')) {
+    // Role mapping based on User ID
+    // 1. ADM- / SUP- maps to Admin Authority (Supervisor Role)
+    if (cleanId.includes('ADM') || cleanId.includes('ADMIN') || cleanId.includes('SUP') || cleanId.includes('SUPERVISOR')) {
       setError('');
       login('Supervisor', `${cleanId.toLowerCase()}@authority.gov.in`, {
-        name: `Chief Supervisor (${cleanId})`,
+        name: `Admin Authority (${cleanId})`,
         supervisorId: cleanId
       });
-    } else if (cleanId.includes('ADM') || cleanId.startsWith('ADMIN')) {
+    }
+    // 2. STA- / STF- maps to Staff Member (Admin Role)
+    else if (cleanId.includes('STA') || cleanId.includes('STF') || cleanId.includes('STAFF')) {
       setError('');
       login('Admin', `${cleanId.toLowerCase()}@authority.gov.in`, {
-        name: `Administrator (${cleanId})`,
+        name: `Staff Member (${cleanId})`,
         adminId: cleanId
       });
-    } else if (cleanId.includes('STD') || cleanId.startsWith('ROLL') || cleanId.startsWith('STUDENT')) {
-      setError('');
-      login('Student', `${cleanId.toLowerCase()}@student.gov.in`, {
-        name: `Candidate (${cleanId})`,
-        rollNumber: cleanId,
-        subject: 'Computer Security & Cryptography'
-      });
-    } else if (cleanId.includes('CTR') || cleanId.includes('CENTER')) {
+    }
+    // 3. CEN- / CENTER maps to Exam Center
+    else if (cleanId.includes('CEN') || cleanId.includes('CTR') || cleanId.includes('CENTER')) {
       setError('');
       login('Center', `${cleanId.toLowerCase()}@exam-centers.gov.in`, {
-        name: `Exam Center ${cleanId}`,
+        name: `Exam Center (${cleanId})`,
         centerId: cleanId
       });
-    } else if (cleanId.includes('SCR') || cleanId.includes('SCRUTINY')) {
+    }
+    // 4. STD- Candidate Notice
+    else if (cleanId.includes('STD') || cleanId.startsWith('ROLL') || cleanId.startsWith('STUDENT')) {
+      setError('Student logins must be accessed through an Authorized Examination Center.');
+    }
+    // 5. Scrutiny Officer
+    else if (cleanId.includes('SCR') || cleanId.includes('SCRUTINY')) {
       setError('');
       login('Scrutiny Officer', `${cleanId.toLowerCase()}@authority.gov.in`, {
         name: `Scrutiny Officer (${cleanId})`
       });
-    } else if (cleanId.includes('AUD') || cleanId.includes('AUDITOR')) {
+    }
+    // 6. Auditor
+    else if (cleanId.includes('AUD') || cleanId.includes('AUDITOR')) {
       setError('');
       login('Auditor', `${cleanId.toLowerCase()}@authority.gov.in`, {
         name: `Auditor (${cleanId})`
       });
     } else {
-      setError('Unrecognized ID prefix. Include SUP- for Supervisor, ADM- for Admin, or STD- for Student.');
+      setError('Invalid User ID or Password.');
     }
   };
 
@@ -72,32 +78,34 @@ export default function PublicLogin() {
         className="glass-panel"
         style={{
           width: '100%',
-          maxWidth: '460px',
+          maxWidth: '440px',
           padding: '36px',
           border: '1px solid rgba(0, 120, 212, 0.25)'
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div
             style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '14px',
+              width: '52px',
+              height: '52px',
+              borderRadius: '12px',
               background: 'linear-gradient(135deg, #0078d4 0%, #0284c7 100%)',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
-              marginBottom: '16px',
+              marginBottom: '12px',
               boxShadow: '0 0 20px rgba(0, 120, 212, 0.4)'
             }}
           >
-            <Shield size={28} />
+            <Shield size={26} />
           </div>
-          <h2 style={{ fontSize: '1.4rem', marginBottom: '6px' }}>Secure Portal Gateway</h2>
-          <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-            Enter ID (<strong>SUP-</strong> Chief Supervisor, <strong>ADM-</strong> Admin, <strong>STD-</strong> Student)
-          </p>
+          <h1 style={{ fontSize: '1.45rem', fontWeight: 700, margin: '0 0 4px 0', letterSpacing: '-0.02em' }}>
+            SecurExam
+          </h1>
+          <h2 style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--text-muted)', margin: 0 }}>
+            Login
+          </h2>
         </div>
 
         {error && (
@@ -115,21 +123,21 @@ export default function PublicLogin() {
               gap: '8px'
             }}
           >
-            <ShieldAlert size={16} />
+            <ShieldAlert size={16} style={{ flexShrink: 0 }} />
             <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleCredentialsSubmit}>
           <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <UserCheck size={14} />
-              <span>User / Identification ID</span>
+              <span>User ID</span>
             </label>
             <input
               type="text"
               className="form-control"
-              placeholder="e.g. SUP-101, ADM-101, STD-2026-001"
+              placeholder="User ID"
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               required
@@ -144,7 +152,7 @@ export default function PublicLogin() {
             <input
               type="password"
               className="form-control"
-              placeholder="Enter password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -156,14 +164,10 @@ export default function PublicLogin() {
             className="btn btn-primary"
             style={{ width: '100%', padding: '12px', fontSize: '0.95rem' }}
           >
-            <span>Sign In to Portal</span>
+            <span>Sign In</span>
             <ArrowRight size={16} />
           </button>
         </form>
-
-        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-          System Status: Operational • Automatic Role Routing Active
-        </div>
       </div>
     </div>
   );

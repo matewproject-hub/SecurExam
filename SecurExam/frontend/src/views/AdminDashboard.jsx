@@ -3,23 +3,12 @@ import {
   LayoutDashboard,
   Database,
   UploadCloud,
-  CheckSquare,
-  Cpu,
-  FileCheck,
-  Link2,
-  Users,
-  PlusCircle,
   CheckCircle2,
-  Sparkles,
-  ShieldCheck,
-  Trash2,
-  Send,
   Eye,
-  Clock,
   Lock,
   Timer,
-  AlertTriangle,
-  Settings
+  Send,
+  PlusCircle
 } from 'lucide-react';
 import { BLOOM_TAXONOMY, COURSE_OUTCOMES } from '../data/mockData';
 import { useData } from '../context/DataContext';
@@ -29,16 +18,9 @@ import Modal from '../components/Modal';
 export default function AdminDashboard() {
   const {
     questions,
-    generatedPapers,
-    auditLogs,
-    users,
     uploadWindow,
-    setUploadWindow,
     isUploadAllowed,
-    addQuestion,
-    generatePaper,
-    addUser,
-    deleteUser
+    addQuestion
   } = useData();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -53,8 +35,6 @@ export default function AdminDashboard() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
-
-  const [showTimeControl, setShowTimeControl] = useState(false);
 
   const uploadCheck = isUploadAllowed();
 
@@ -88,22 +68,19 @@ export default function AdminDashboard() {
 
   const uploadCountdown = getUploadCountdown();
 
-  // User creation form state
-  const [newUserForm, setNewUserForm] = useState({ name: '', role: 'Scrutiny Officer (Level 1)', clearance: 'Tier 2 Scrutiny' });
-  const [showUserModal, setShowUserModal] = useState(false);
+  // Filter questions submitted exclusively by this admin
+  const currentAdminName = user?.name || 'Staff Member';
+  const myQuestions = questions.filter(
+    (q) => q.submittedBy === currentAdminName || q.submittedBy === user?.name
+  );
 
-  // Unique subjects derived dynamically
-  const uniqueSubjects = Array.from(new Set(questions.map((q) => q.subject))).filter(Boolean);
+  // Unique subjects derived dynamically from this admin's uploaded questions
+  const uniqueSubjects = Array.from(new Set(myQuestions.map((q) => q.subject))).filter(Boolean);
 
-  // Derived stats
+  // Derived stats for Admin
   const stats = {
     totalSubjects: uniqueSubjects.length,
-    uploadedQuestions: questions.length,
-    pendingScrutiny: questions.filter((q) => q.status && q.status.includes('Pending')).length,
-    approvedQuestions: questions.filter((q) => q.status === 'Approved').length,
-    generatedPapers: generatedPapers.length,
-    blockchainTx: auditLogs.length,
-    registeredUsers: users.length
+    uploadedQuestions: myQuestions.length
   };
 
   // Manual Question Entry Form State
@@ -119,9 +96,6 @@ export default function AdminDashboard() {
     answer: '',
     keywords: ''
   });
-
-  // Selected subject for AI Paper Generation
-  const [selectedGenSubject, setSelectedGenSubject] = useState(uniqueSubjects[0] || '');
 
   const [notification, setNotification] = useState('');
 
@@ -148,7 +122,6 @@ export default function AdminDashboard() {
     for (const file of files) {
       try {
         const text = await file.text();
-        // Check if file is JSON
         let parsed;
         try {
           parsed = JSON.parse(text);
@@ -170,12 +143,11 @@ export default function AdminDashboard() {
                 questionText: item.questionText || 'Imported Question Content',
                 answer: item.answer || 'Imported Solution',
                 keywords: Array.isArray(item.keywords) ? item.keywords : (item.keywords || '').split(',')
-              }, user?.name || 'Administrator');
+              }, currentAdminName);
               addedCount++;
             }
           });
         } else {
-          // Parse lines from plain text / CSV
           const lines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
           lines.forEach((line, idx) => {
             addQuestion({
@@ -189,7 +161,7 @@ export default function AdminDashboard() {
               questionText: line,
               answer: 'Reference solution required',
               keywords: ['Imported']
-            }, user?.name || 'Administrator');
+            }, currentAdminName);
             addedCount++;
           });
         }
@@ -212,7 +184,7 @@ export default function AdminDashboard() {
         ...manualForm,
         bloomLevel: manualForm.bloomLevel.split(' ')[0],
         keywords: manualForm.keywords ? manualForm.keywords.split(',').map((k) => k.trim()) : []
-      }, user?.name || 'Administrator');
+      }, currentAdminName);
 
       triggerNotify(`Question ${createdQ.id} added and submitted for Scrutiny Round 1!`);
       setManualForm({
@@ -232,51 +204,17 @@ export default function AdminDashboard() {
     }
   };
 
-  // AI Paper Generation Handler
-  const handleGenerateAIPaper = () => {
-    const approvedForSubject = questions.filter(
-      (q) => q.status === 'Approved' && (q.subject === selectedGenSubject || !selectedGenSubject)
-    );
-
-    if (approvedForSubject.length === 0) {
-      triggerNotify(`No Scrutiny-Approved questions available for "${selectedGenSubject}". Please approve questions first.`);
-      return;
-    }
-
-    const createdPaper = generatePaper({
-      title: `${selectedGenSubject} Examination Paper`,
-      subject: selectedGenSubject,
-      userName: user?.name || 'Administrator'
-    });
-
-    triggerNotify(`Paper ${createdPaper.paperCode} generated with ${createdPaper.questions.length} approved question(s).`);
-  };
-
-  const handleAddUserSubmit = (e) => {
-    e.preventDefault();
-    if (!newUserForm.name.trim()) return;
-    const added = addUser(newUserForm, user?.name || 'Administrator');
-    triggerNotify(`New User ${added.name} (${added.id}) created successfully!`);
-    setNewUserForm({ name: '', role: 'Scrutiny Officer (Level 1)', clearance: 'Tier 2 Scrutiny' });
-    setShowUserModal(false);
-  };
-
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard Overview', icon: LayoutDashboard },
-    { id: 'repository', label: 'Question Repository', icon: Database },
-    { id: 'upload', label: 'Upload Questions', icon: UploadCloud },
-    { id: 'scrutiny-mgt', label: 'Scrutiny Management', icon: CheckSquare },
-    { id: 'ai-gen', label: 'AI Paper Generation', icon: Cpu },
-    { id: 'generated-papers', label: 'Generated Papers', icon: FileCheck },
-    { id: 'blockchain', label: 'Audit Logs', icon: Link2 },
-    { id: 'users', label: 'User Management', icon: Users }
+    { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+    { id: 'repository', label: 'Questions', icon: Database },
+    { id: 'upload', label: 'Upload', icon: UploadCloud }
   ];
 
   return (
     <div className="dashboard-layout">
       {/* Sidebar Navigation */}
       <aside className="sidebar-nav">
-        <div className="nav-section-label">ADMINISTRATOR CONSOLE</div>
+        <div className="nav-section-label">STAFF</div>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -322,128 +260,41 @@ export default function AdminDashboard() {
         {/* 1. DASHBOARD OVERVIEW */}
         {activeTab === 'dashboard' && (
           <div>
-            <div style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '1.4rem' }}>System Analytics & Infrastructure Status</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                Real-time tracking of examination paper generation pipeline and security status.
-              </p>
+            <div style={{ marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Overview</h2>
             </div>
 
             {/* Analytics Cards */}
             <div className="stats-grid">
               <div className="glass-panel stat-card">
                 <div>
-                  <div className="stat-title">Total Subjects</div>
+                  <div className="stat-title">Subjects</div>
                   <div className="stat-value">{stats.totalSubjects}</div>
-                  <span className="stat-badge" style={{ background: 'rgba(0, 120, 212, 0.2)', color: '#38bdf8' }}>
-                    Active Curriculums
-                  </span>
                 </div>
                 <Database size={24} style={{ color: '#0078d4', opacity: 0.8 }} />
               </div>
 
               <div className="glass-panel stat-card">
                 <div>
-                  <div className="stat-title">Uploaded Questions</div>
+                  <div className="stat-title">Questions</div>
                   <div className="stat-value">{stats.uploadedQuestions}</div>
-                  <span className="stat-badge" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#34d399' }}>
-                    In Repository
-                  </span>
                 </div>
                 <UploadCloud size={24} style={{ color: '#10b981', opacity: 0.8 }} />
-              </div>
-
-              <div className="glass-panel stat-card">
-                <div>
-                  <div className="stat-title">Pending Scrutiny</div>
-                  <div className="stat-value">{stats.pendingScrutiny}</div>
-                  <span className="stat-badge" style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24' }}>
-                    In Queue
-                  </span>
-                </div>
-                <CheckSquare size={24} style={{ color: '#f59e0b', opacity: 0.8 }} />
-              </div>
-
-              <div className="glass-panel stat-card">
-                <div>
-                  <div className="stat-title">Approved Questions</div>
-                  <div className="stat-value">{stats.approvedQuestions}</div>
-                  <span className="stat-badge" style={{ background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc' }}>
-                    Verified Bank
-                  </span>
-                </div>
-                <CheckCircle2 size={24} style={{ color: '#a855f7', opacity: 0.8 }} />
-              </div>
-
-              <div className="glass-panel stat-card">
-                <div>
-                  <div className="stat-title">Generated Papers</div>
-                  <div className="stat-value">{stats.generatedPapers}</div>
-                  <span className="stat-badge" style={{ background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8' }}>
-                    Secured Papers
-                  </span>
-                </div>
-                <FileCheck size={24} style={{ color: '#38bdf8', opacity: 0.8 }} />
-              </div>
-
-              <div className="glass-panel stat-card">
-                <div>
-                  <div className="stat-title">Audit Transactions</div>
-                  <div className="stat-value">{stats.blockchainTx}</div>
-                  <span className="stat-badge" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#34d399' }}>
-                    Audit Records
-                  </span>
-                </div>
-                <Link2 size={24} style={{ color: '#10b981', opacity: 0.8 }} />
-              </div>
-
-              <div className="glass-panel stat-card">
-                <div>
-                  <div className="stat-title">Registered Staff</div>
-                  <div className="stat-value">{stats.registeredUsers}</div>
-                  <span className="stat-badge" style={{ background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8' }}>
-                    System Users
-                  </span>
-                </div>
-                <ShieldCheck size={24} style={{ color: '#38bdf8', opacity: 0.8 }} />
-              </div>
-            </div>
-
-            {/* Quick Actions Panel */}
-            <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '1.05rem', marginBottom: '16px' }}>Quick Administrative Commands</h3>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <button className="btn btn-primary" onClick={() => setActiveTab('upload')}>
-                  <PlusCircle size={16} />
-                  <span>Upload / Add Questions</span>
-                </button>
-                <button className="btn btn-secondary" onClick={() => setActiveTab('ai-gen')}>
-                  <Sparkles size={16} style={{ color: '#38bdf8' }} />
-                  <span>Trigger AI Paper Generation</span>
-                </button>
-                <button className="btn btn-secondary" onClick={() => setActiveTab('blockchain')}>
-                  <Link2 size={16} />
-                  <span>Inspect Audit Ledger</span>
-                </button>
-                <button className="btn btn-secondary" onClick={() => setActiveTab('users')}>
-                  <Users size={16} />
-                  <span>Manage System Users</span>
-                </button>
               </div>
             </div>
 
             {/* Recent Questions Table */}
             <div className="glass-panel" style={{ padding: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '1rem' }}>Recent Submissions & Scrutiny Progress</h3>
+                <h3 style={{ fontSize: '1rem', margin: 0 }}>Recent Questions</h3>
                 <button className="btn btn-secondary" onClick={() => setActiveTab('repository')} style={{ fontSize: '0.78rem' }}>
-                  View All Repository Questions
+                  View All
                 </button>
               </div>
               <div className="table-container">
-                {questions.length === 0 ? (
+                {myQuestions.length === 0 ? (
                   <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No questions in repository yet. Click "Upload / Add Questions" to start.
+                    No questions uploaded by you yet. Click "Upload / Add Questions" to start.
                   </div>
                 ) : (
                   <table className="custom-table">
@@ -453,13 +304,12 @@ export default function AdminDashboard() {
                         <th>Subject</th>
                         <th>Bloom Taxonomy</th>
                         <th>Marks</th>
-                        <th>Scrutiny Status</th>
                         <th>Submitted By</th>
                         <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {questions.slice(0, 5).map((q) => (
+                      {myQuestions.slice(0, 5).map((q) => (
                         <tr key={q.id}>
                           <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#38bdf8' }}>{q.id}</td>
                           <td>{q.subject}</td>
@@ -469,11 +319,6 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td>{q.marks} M</td>
-                          <td>
-                            <span className={`round-pill round-${q.round || 1}`}>
-                              {q.status}
-                            </span>
-                          </td>
                           <td>{q.submittedBy}</td>
                           <td>
                             <button
@@ -498,24 +343,19 @@ export default function AdminDashboard() {
         {/* 2. QUESTION REPOSITORY */}
         {activeTab === 'repository' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div>
-                <h2 style={{ fontSize: '1.4rem' }}>Question Repository</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  Centralized question bank categorized by Bloom's Taxonomy & Course Outcomes.
-                </p>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Questions</h2>
               <button className="btn btn-primary" onClick={() => setActiveTab('upload')}>
-                <PlusCircle size={16} />
+                <PlusCircle size={15} />
                 <span>Add Question</span>
               </button>
             </div>
 
             <div className="glass-panel" style={{ padding: '20px' }}>
               <div className="table-container">
-                {questions.length === 0 ? (
+                {myQuestions.length === 0 ? (
                   <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    Question repository is currently empty.
+                    You have not uploaded any questions to the repository yet.
                   </div>
                 ) : (
                   <table className="custom-table">
@@ -526,12 +366,11 @@ export default function AdminDashboard() {
                         <th>Bloom's Level</th>
                         <th>Course Outcome</th>
                         <th>Marks</th>
-                        <th>Status</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {questions.map((q) => (
+                      {myQuestions.map((q) => (
                         <tr key={q.id}>
                           <td style={{ fontFamily: 'var(--font-mono)', color: '#38bdf8', fontWeight: 600 }}>{q.id}</td>
                           <td>
@@ -541,9 +380,6 @@ export default function AdminDashboard() {
                           <td>{q.bloomLevel}</td>
                           <td>{q.courseOutcome ? q.courseOutcome.split(':')[0] : 'N/A'}</td>
                           <td>{q.marks} Marks</td>
-                          <td>
-                            <span className={`round-pill round-${q.round || 1}`}>{q.status}</span>
-                          </td>
                           <td>
                             <button
                               className="btn btn-secondary"
@@ -567,12 +403,7 @@ export default function AdminDashboard() {
         {activeTab === 'upload' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <h2 style={{ fontSize: '1.4rem' }}>Upload & Ingest Questions</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  Batch import via drag-and-drop file ingestion or manually enter questions into the repository.
-                </p>
-              </div>
+              <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Upload Questions</h2>
 
               {/* Time Limit Status Badge */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -625,35 +456,32 @@ export default function AdminDashboard() {
                     Question Submissions Currently Locked
                   </h4>
                   <p style={{ fontSize: '0.82rem', margin: '4px 0 0 0', opacity: 0.9 }}>
-                    {uploadCheck.reason} Use the Quick Extend buttons or update the Upload Deadline above to allow new question entries.
+                    {uploadCheck.reason} Please contact the Admin Authority to unlock the Question Upload Window.
                   </p>
                 </div>
               </div>
             )}
 
             {/* Upload Workspace */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', opacity: uploadCheck.allowed ? 1 : 0.55 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', opacity: uploadCheck.allowed ? 1 : 0.55 }}>
               {/* Batch Drag-and-Drop Uploader */}
-              <div className="glass-panel" style={{ padding: '24px', position: 'relative' }}>
-                <h3 style={{ fontSize: '1.05rem', marginBottom: '12px' }}>Bulk File Import</h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
-                  Supports JSON arrays and text files with question lists.
-                </p>
+              <div className="glass-panel" style={{ padding: '20px', position: 'relative' }}>
+                <h3 style={{ fontSize: '1rem', marginBottom: '14px' }}>Bulk Import</h3>
 
                 <div className="dropzone" onDragOver={handleDragOver} onDrop={handleDrop} style={{ cursor: uploadCheck.allowed ? 'pointer' : 'not-allowed' }}>
-                  <UploadCloud size={48} style={{ color: uploadCheck.allowed ? '#0078d4' : '#64748b', marginBottom: '12px' }} />
-                  <h4 style={{ fontSize: '1rem', marginBottom: '6px' }}>
-                    {uploadCheck.allowed ? 'Drag & Drop Question Files Here' : 'Upload Zone Locked (Time Limit Expired)'}
+                  <UploadCloud size={40} style={{ color: uploadCheck.allowed ? '#0078d4' : '#64748b', marginBottom: '8px' }} />
+                  <h4 style={{ fontSize: '0.95rem', marginBottom: '4px' }}>
+                    {uploadCheck.allowed ? 'Drop Question Files Here' : 'Upload Locked'}
                   </h4>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '16px' }}>
-                    {uploadCheck.allowed ? 'Select .json or .txt question files to process into scrutiny queue' : 'Time limit expired. Extend deadline to upload.'}
-                  </p>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
+                    {uploadCheck.allowed ? '.json or .txt format' : 'Submission window closed'}
+                  </span>
                 </div>
               </div>
 
               {/* Manual Question Form */}
-              <div className="glass-panel" style={{ padding: '24px' }}>
-                <h3 style={{ fontSize: '1.05rem', marginBottom: '16px' }}>Manual Question Entry</h3>
+              <div className="glass-panel" style={{ padding: '20px' }}>
+                <h3 style={{ fontSize: '1rem', marginBottom: '14px' }}>Manual Entry</h3>
 
                 <form onSubmit={handleManualSubmit}>
                   <fieldset disabled={!uploadCheck.allowed} style={{ border: 'none', padding: 0, margin: 0 }}>
@@ -799,346 +627,6 @@ export default function AdminDashboard() {
                 </form>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* 4. SCRUTINY MANAGEMENT */}
-        {activeTab === 'scrutiny-mgt' && (
-          <div>
-            <div style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '1.4rem' }}>Scrutiny Management & Flow Supervision</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                Monitor multi-round scrutiny queues and approval progress.
-              </p>
-            </div>
-
-            <div className="glass-panel" style={{ padding: '24px' }}>
-              <h3 style={{ fontSize: '1.05rem', marginBottom: '16px' }}>Scrutiny Pipeline Monitor</h3>
-              <div className="table-container">
-                {questions.length === 0 ? (
-                  <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No questions currently undergoing scrutiny.
-                  </div>
-                ) : (
-                  <table className="custom-table">
-                    <thead>
-                      <tr>
-                        <th>Question ID</th>
-                        <th>Subject</th>
-                        <th>Current Round</th>
-                        <th>Submitted By</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {questions.map((q) => (
-                        <tr key={q.id}>
-                          <td style={{ fontFamily: 'var(--font-mono)', color: '#38bdf8' }}>{q.id}</td>
-                          <td>{q.subject}</td>
-                          <td>
-                            <span className={`round-pill round-${q.round || 1}`}>Round {q.round || 1}</span>
-                          </td>
-                          <td>{q.submittedBy}</td>
-                          <td>{q.status}</td>
-                          <td>
-                            <button
-                              className="btn btn-secondary"
-                              onClick={() => setSelectedQuestion(q)}
-                              style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-                            >
-                              View Details
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 5. AI PAPER GENERATION */}
-        {activeTab === 'ai-gen' && (
-          <div>
-            <div style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '1.4rem' }}>AI Examination Paper Generation Engine</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                Automated blueprint-driven question paper creation using verified questions.
-              </p>
-            </div>
-
-            <div className="glass-panel" style={{ padding: '28px', maxWidth: '700px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '20px' }}>
-                <Sparkles size={28} style={{ color: '#0078d4' }} />
-                <div>
-                  <h3 style={{ fontSize: '1.1rem' }}>Paper Generation Target</h3>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                    Constructs exam papers exclusively from 100% Scrutiny-Approved questions.
-                  </div>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Select Target Course / Subject</label>
-                {uniqueSubjects.length > 0 ? (
-                  <select
-                    className="form-select"
-                    value={selectedGenSubject}
-                    onChange={(e) => setSelectedGenSubject(e.target.value)}
-                  >
-                    {uniqueSubjects.map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter subject name (e.g. Computer Security & Cryptography)"
-                    value={selectedGenSubject}
-                    onChange={(e) => setSelectedGenSubject(e.target.value)}
-                  />
-                )}
-              </div>
-
-              <div style={{ background: 'rgba(0, 120, 212, 0.08)', border: '1px solid rgba(0, 120, 212, 0.2)', padding: '16px', borderRadius: '8px', marginBottom: '24px' }}>
-                <h4 style={{ fontSize: '0.85rem', color: '#38bdf8', marginBottom: '8px' }}>Approved Question Availability</h4>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-main)' }}>
-                  Total Scrutiny-Approved Questions for "{selectedGenSubject}":{' '}
-                  <strong>
-                    {questions.filter((q) => q.status === 'Approved' && q.subject === selectedGenSubject).length}
-                  </strong>
-                </div>
-              </div>
-
-              <button className="btn btn-primary" onClick={handleGenerateAIPaper} style={{ width: '100%', padding: '12px', fontSize: '0.95rem' }}>
-                <Sparkles size={18} />
-                <span>Generate Encrypted Question Paper</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 6. GENERATED PAPERS */}
-        {activeTab === 'generated-papers' && (
-          <div>
-            <div style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '1.4rem' }}>Generated Examination Papers</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                Finalized examination papers stored on distributed storage.
-              </p>
-            </div>
-
-            <div className="glass-panel" style={{ padding: '20px' }}>
-              <div className="table-container">
-                {generatedPapers.length === 0 ? (
-                  <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No examination papers have been generated yet.
-                  </div>
-                ) : (
-                  <table className="custom-table">
-                    <thead>
-                      <tr>
-                        <th>Paper Code</th>
-                        <th>Title & Subject</th>
-                        <th>Generated At</th>
-                        <th>Questions Included</th>
-                        <th>IPFS CID</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {generatedPapers.map((p) => (
-                        <tr key={p.paperCode}>
-                          <td style={{ fontFamily: 'var(--font-mono)', color: '#38bdf8', fontWeight: 600 }}>{p.paperCode}</td>
-                          <td>
-                            <div style={{ fontWeight: 600 }}>{p.title}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.subject}</div>
-                          </td>
-                          <td>{p.generatedAt}</td>
-                          <td>{p.questions ? p.questions.length : 0} Qs</td>
-                          <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: '#10b981' }}>
-                            {p.ipfsCID}
-                          </td>
-                          <td>
-                            <span style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: 4, background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', fontWeight: 600 }}>
-                              {p.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 7. BLOCKCHAIN / AUDIT LOGS */}
-        {activeTab === 'blockchain' && (
-          <div>
-            <div style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '1.4rem' }}>Audit Transaction Ledger</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                Immutable audit record of all paper creation, scrutiny approvals, and decryption events.
-              </p>
-            </div>
-
-            <div className="glass-panel" style={{ padding: '20px' }}>
-              <div className="table-container">
-                {auditLogs.length === 0 ? (
-                  <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No audit records logged yet.
-                  </div>
-                ) : (
-                  <table className="custom-table">
-                    <thead>
-                      <tr>
-                        <th>TX Hash</th>
-                        <th>Timestamp</th>
-                        <th>Action</th>
-                        <th>Performed By</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {auditLogs.map((tx) => (
-                        <tr key={tx.id}>
-                          <td style={{ fontFamily: 'var(--font-mono)', color: '#38bdf8', fontSize: '0.75rem' }}>
-                            {tx.txHash ? `${tx.txHash.substring(0, 16)}...` : tx.id}
-                          </td>
-                          <td>{tx.timestamp}</td>
-                          <td><strong>{tx.action}</strong></td>
-                          <td>{tx.user}</td>
-                          <td>
-                            <span style={{ color: '#34d399', fontSize: '0.75rem', fontWeight: 600 }}>
-                              {tx.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 8. USER MANAGEMENT */}
-        {activeTab === 'users' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div>
-                <h2 style={{ fontSize: '1.4rem' }}>Role-Based User Management</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  Manage Scrutiny Officers, Security Auditors, and System Users.
-                </p>
-              </div>
-              <button className="btn btn-primary" onClick={() => setShowUserModal(true)}>
-                <PlusCircle size={16} />
-                <span>Add System User</span>
-              </button>
-            </div>
-
-            <div className="glass-panel" style={{ padding: '20px' }}>
-              <div className="table-container">
-                {users.length === 0 ? (
-                  <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No additional system users added yet.
-                  </div>
-                ) : (
-                  <table className="custom-table">
-                    <thead>
-                      <tr>
-                        <th>User ID</th>
-                        <th>Name / Entity</th>
-                        <th>Assigned Role</th>
-                        <th>Security Clearance</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((u) => (
-                        <tr key={u.id}>
-                          <td style={{ fontFamily: 'var(--font-mono)' }}>{u.id}</td>
-                          <td>{u.name}</td>
-                          <td>{u.role}</td>
-                          <td>{u.clearance}</td>
-                          <td><span style={{ color: '#34d399', fontWeight: 600 }}>{u.status}</span></td>
-                          <td>
-                            <button
-                              className="btn btn-danger"
-                              onClick={() => {
-                                deleteUser(u.id, user?.name || 'Administrator');
-                                triggerNotify(`User ${u.name} removed.`);
-                              }}
-                              style={{ padding: '4px 8px', fontSize: '0.75rem' }}
-                            >
-                              <Trash2 size={13} />
-                              <span>Remove</span>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
-
-            {/* Add User Modal */}
-            <Modal isOpen={showUserModal} onClose={() => setShowUserModal(false)} title="Add System User">
-              <form onSubmit={handleAddUserSubmit}>
-                <div className="form-group">
-                  <label className="form-label">User Full Name / Entity</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="e.g. Dr. Jane Doe"
-                    value={newUserForm.name}
-                    onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Assigned Role</label>
-                  <select
-                    className="form-select"
-                    value={newUserForm.role}
-                    onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
-                  >
-                    <option>Scrutiny Officer (Level 1)</option>
-                    <option>Scrutiny Officer (Level 2)</option>
-                    <option>Chief Examiner (Level 3)</option>
-                    <option>Auditor</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Security Clearance</label>
-                  <select
-                    className="form-select"
-                    value={newUserForm.clearance}
-                    onChange={(e) => setNewUserForm({ ...newUserForm, clearance: e.target.value })}
-                  >
-                    <option>Tier 2 Scrutiny</option>
-                    <option>Tier 1 Security Audit</option>
-                    <option>Tier 3 Full Admin</option>
-                  </select>
-                </div>
-
-                <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '10px' }}>
-                  Create User Account
-                </button>
-              </form>
-            </Modal>
           </div>
         )}
 

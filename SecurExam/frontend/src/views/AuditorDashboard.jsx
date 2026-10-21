@@ -51,84 +51,66 @@ export default function AuditorDashboard() {
     <div className="dashboard-layout" style={{ minHeight: 'calc(100vh - 94px)' }}>
       <main className="content-viewport" style={{ width: '100%' }}>
         {/* Title Header */}
-        <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.4rem' }}>Security Audit & Verification Console</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Real-time audit log verification and system integrity management.
-          </p>
+        <div style={{ marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '1.3rem', margin: 0 }}>Audit & Verification</h2>
         </div>
 
         {/* System Security Stats */}
         <div className="stats-grid">
           <div className="glass-panel stat-card">
             <div>
-              <div className="stat-title">Total Audit Logs</div>
+              <div className="stat-title">Total Logs</div>
               <div className="stat-value" style={{ color: '#38bdf8' }}>{auditLogs.length}</div>
-              <span className="stat-badge" style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}>
-                Recorded Events
-              </span>
             </div>
             <Link2 size={24} style={{ color: '#38bdf8' }} />
           </div>
 
           <div className="glass-panel stat-card">
             <div>
-              <div className="stat-title">Verified Transactions</div>
+              <div className="stat-title">Verified Records</div>
               <div className="stat-value" style={{ color: '#34d399' }}>{auditLogs.length}</div>
-              <span className="stat-badge" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
-                Ledger Validated
-              </span>
             </div>
             <CheckCircle2 size={24} style={{ color: '#10b981' }} />
           </div>
 
           <div className="glass-panel stat-card">
             <div>
-              <div className="stat-title">Storage CIDs</div>
+              <div className="stat-title">Indexed Files</div>
               <div className="stat-value" style={{ color: '#a78bfa' }}>
                 {auditLogs.filter((l) => l.cid).length}
               </div>
-              <span className="stat-badge" style={{ background: 'rgba(167, 139, 250, 0.15)', color: '#a78bfa' }}>
-                Indexed Files
-              </span>
             </div>
             <ShieldAlert size={24} style={{ color: '#a78bfa' }} />
           </div>
 
           <div className="glass-panel stat-card">
             <div>
-              <div className="stat-title">System Status</div>
-              <div className="stat-value" style={{ color: '#10b981', fontSize: '1.2rem' }}>ACTIVE</div>
-              <span className="stat-badge" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
-                Audit Active
-              </span>
+              <div className="stat-title">Status</div>
+              <div className="stat-value" style={{ color: '#10b981', fontSize: '1.1rem' }}>Active</div>
             </div>
             <ShieldCheck size={24} style={{ color: '#10b981' }} />
           </div>
         </div>
 
         {/* Verification Tool */}
-        <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px', border: '1px solid rgba(0, 120, 212, 0.3)' }}>
-          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Search size={18} style={{ color: '#0078d4' }} />
-            <span>Record Integrity Verifier</span>
+        <div className="glass-panel" style={{ padding: '20px', marginBottom: '20px', border: '1px solid rgba(0, 120, 212, 0.3)' }}>
+          <h3 style={{ fontSize: '1rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Search size={16} style={{ color: '#0078d4' }} />
+            <span>Record Verifier</span>
           </h3>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-            Enter any transaction ID, log hash, or audit record CID to perform instant verification.
-          </p>
 
           <form onSubmit={handleVerifyHash} style={{ display: 'flex', gap: '12px' }}>
             <input
               type="text"
               className="form-control"
-              placeholder="Enter Record ID, TX Hash, or CID..."
+              placeholder="Search by Record ID or Reference..."
               value={searchHash}
               onChange={(e) => setSearchHash(e.target.value)}
               style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}
             />
             <button type="submit" className="btn btn-primary" style={{ flexShrink: 0 }}>
-              <ShieldCheck size={16} />
-              <span>Verify Integrity</span>
+              <ShieldCheck size={15} />
+              <span>Verify</span>
             </button>
           </form>
 
@@ -196,26 +178,26 @@ export default function AuditorDashboard() {
         {/* Detailed Audit Table */}
         <div className="glass-panel" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '1rem' }}>Comprehensive System Audit Logs</h3>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{auditLogs.length} events logged</span>
+            <h3 style={{ fontSize: '1rem', margin: 0 }}>Audit Logs</h3>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{auditLogs.length} events</span>
           </div>
 
           <div className="table-container">
             {auditLogs.length === 0 ? (
               <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                No audit logs currently in ledger.
+                No audit logs available.
               </div>
             ) : (
               <table className="custom-table">
                 <thead>
                   <tr>
                     <th>Timestamp</th>
-                    <th>User / Responsible Agent</th>
-                    <th>Action Executed</th>
-                    <th>Log Reference</th>
-                    <th>File Reference</th>
-                    <th>Verification Status</th>
-                    <th>Integrity Check</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Reference ID</th>
+                    <th>File Ref</th>
+                    <th>Status</th>
+                    <th>Check</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, ShieldCheck, Play, Lock, AlertCircle, CheckCircle2, Send, UserCheck } from 'lucide-react';
+import { Clock, ShieldCheck, Play, Lock, AlertCircle, CheckCircle2, Send, UserCheck, ArrowLeft, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
-import Modal from '../components/Modal';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -24,7 +23,7 @@ export default function StudentDashboard() {
 
   const displayQuestions = activePaper?.questions && activePaper.questions.length > 0
     ? activePaper.questions
-    : safeQuestions.filter((q) => q.status === 'Approved' && (!activePaper || q.subject === activePaper.subject));
+    : safeQuestions.filter((q) => (!activePaper || q.subject === activePaper.subject));
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -93,6 +92,195 @@ export default function StudentDashboard() {
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // If the candidate has clicked "Start Exam", direct them to the dedicated Exam Page View
+  if (isExamOpen) {
+    return (
+      <div style={{ maxWidth: '960px', margin: '0 auto', width: '100%', padding: '16px 0' }}>
+        {/* Dedicated Exam Page Top Header */}
+        <div
+          className="glass-panel"
+          style={{
+            padding: '20px 24px',
+            marginBottom: '20px',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 16
+          }}
+        >
+          <div>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setIsExamOpen(false)}
+              style={{ padding: '5px 12px', fontSize: '0.78rem', marginBottom: '10px' }}
+            >
+              <ArrowLeft size={14} />
+              <span>Back to Dashboard Overview</span>
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <FileText size={22} style={{ color: '#10b981' }} />
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
+                  {studentInfo.subject}
+                </h2>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Paper Code: <span style={{ fontFamily: 'var(--font-mono)', color: '#38bdf8' }}>{studentInfo.paperCode}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>
+                Candidate Details
+              </div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                {studentInfo.name}
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#10b981', fontFamily: 'var(--font-mono)' }}>
+                {studentInfo.rollNumber}
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: 'rgba(15, 23, 42, 0.8)',
+                border: '1px solid rgba(16, 185, 129, 0.4)',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                textAlign: 'center'
+              }}
+            >
+              <div style={{ fontSize: '0.68rem', color: '#34d399', textTransform: 'uppercase', fontWeight: 700 }}>
+                Exam Timer (IST)
+              </div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.1rem', fontWeight: 700, color: 'white' }}>
+                {currentTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Submission Receipt Callout if already submitted */}
+        {isSubmitted && submissionReceipt && (
+          <div
+            className="glass-panel"
+            style={{
+              padding: '20px 24px',
+              marginBottom: '24px',
+              background: 'rgba(16, 185, 129, 0.1)',
+              border: '1px solid rgba(16, 185, 129, 0.4)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#34d399', fontWeight: 700, fontSize: '0.95rem', marginBottom: '12px' }}>
+              <CheckCircle2 size={20} />
+              <span>Answer Sheet Submitted</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', fontSize: '0.84rem' }}>
+              <div>
+                <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Receipt ID:</span>
+                <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-main)', fontWeight: 600 }}>{submissionReceipt.receiptId}</div>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Reference ID:</span>
+                <div style={{ fontFamily: 'var(--font-mono)', color: '#38bdf8' }}>{submissionReceipt.txHash.substring(0, 18)}...</div>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Answered Questions:</span>
+                <div style={{ fontWeight: 600 }}>{submissionReceipt.answeredCount} of {submissionReceipt.totalCount}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Questions List & Workspace Form */}
+        <div className="glass-panel" style={{ padding: '28px' }}>
+          <form onSubmit={handleSubmitExam}>
+            {!displayQuestions || displayQuestions.length === 0 ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                No examination questions are currently loaded for this subject.
+              </div>
+            ) : (
+              displayQuestions.map((q, idx) => (
+                <div
+                  key={q.id || idx}
+                  style={{
+                    marginBottom: '28px',
+                    paddingBottom: '24px',
+                    borderBottom: idx === displayQuestions.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.08)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <span style={{ fontWeight: 700, color: '#38bdf8', fontSize: '0.95rem' }}>
+                      Question {idx + 1} {q.courseOutcome ? `(${q.courseOutcome.split(':')[0]})` : ''}
+                    </span>
+                    <span
+                      style={{
+                        background: 'rgba(56, 189, 248, 0.15)',
+                        color: '#38bdf8',
+                        padding: '3px 10px',
+                        borderRadius: '12px',
+                        fontSize: '0.78rem',
+                        fontWeight: 600
+                      }}
+                    >
+                      {q.marks} Marks
+                    </span>
+                  </div>
+
+                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.94rem', lineHeight: 1.6, color: 'var(--text-main)' }}>
+                    {q.questionText}
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '6px' }}>
+                      Candidate Written Answer / Solution:
+                    </label>
+                    <textarea
+                      rows={5}
+                      className="form-control"
+                      placeholder="Type your response here..."
+                      value={submittedAnswers[q.id || idx] || ''}
+                      onChange={(e) => handleAnswerChange(q.id || idx, e.target.value)}
+                      disabled={isSubmitted}
+                      style={{ fontSize: '0.9rem', lineHeight: 1.5, padding: '12px' }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+
+            <div style={{ display: 'flex', gap: 14, marginTop: '28px', borderTop: '1px solid var(--border-light)', paddingTop: '20px' }}>
+              {!isSubmitted && displayQuestions.length > 0 && (
+                <button
+                  type="submit"
+                  className="btn btn-success"
+                  style={{ flex: 1, padding: '14px', fontSize: '1rem', fontWeight: 600, boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)' }}
+                >
+                  <Send size={18} />
+                  <span>Submit Final Answer Sheet</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setIsExamOpen(false)}
+                style={{ padding: '14px 20px', fontSize: '0.9rem' }}
+              >
+                Return to Dashboard
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Dashboard Overview View (Before starting exam or reviewing status)
   return (
     <div style={{ maxWidth: '840px', margin: '0 auto', width: '100%', padding: '16px 0' }}>
       {/* Student Details Card */}
@@ -200,15 +388,15 @@ export default function StudentDashboard() {
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', fontWeight: 600, color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', padding: '4px 12px', borderRadius: '12px', marginBottom: '8px' }}>
               <Lock size={13} />
-              <span>EXAMINATION PAPER LOCKED • WAITING FOR START TIME</span>
+              <span>Scheduled</span>
             </div>
 
             <div className="timer-large highlight-amber">
               {formatCountdown(countdownSeconds)}
             </div>
 
-            <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', maxWidth: '520px', margin: '0 auto 20px', lineHeight: 1.5 }}>
-              The examination paper is encrypted. Access will open automatically once the countdown reaches zero.
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto 20px', lineHeight: 1.5 }}>
+              The examination paper will open automatically at the start time.
             </p>
 
             <button
@@ -217,7 +405,7 @@ export default function StudentDashboard() {
               style={{ width: '100%', maxWidth: '420px', padding: '12px', opacity: 0.65, cursor: 'not-allowed' }}
             >
               <Lock size={16} />
-              <span>Locked (Unlocks Automatically at Exam Start Time)</span>
+              <span>Locked until start time</span>
             </button>
           </div>
         )}
@@ -226,26 +414,26 @@ export default function StudentDashboard() {
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', fontWeight: 600, color: 'var(--success)', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 12px', borderRadius: '12px', marginBottom: '12px' }}>
               <ShieldCheck size={14} />
-              <span>EXAMINATION SESSION ACTIVE</span>
+              <span>In Session</span>
             </div>
 
             <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px' }}>
-              {isSubmitted ? 'Answer Sheet Successfully Submitted' : 'Your Examination Paper is Ready'}
+              {isSubmitted ? 'Answer Sheet Submitted' : 'Examination Paper Ready'}
             </h3>
 
-            <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', maxWidth: '520px', margin: '0 auto 24px', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto 20px', lineHeight: 1.5 }}>
               {isSubmitted
-                ? 'Your responses have been cryptographically signed and stored in the evaluation ledger.'
-                : 'Click below to launch the online question paper & answer workspace.'}
+                ? 'Your answers have been recorded.'
+                : 'Click below to begin the examination.'}
             </p>
 
             <button
               className="btn btn-success"
               onClick={() => setIsExamOpen(true)}
-              style={{ width: '100%', maxWidth: '420px', padding: '14px 24px', fontSize: '0.95rem', fontWeight: 600, gap: 8, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
+              style={{ width: '100%', maxWidth: '420px', padding: '12px 24px', fontSize: '0.95rem', fontWeight: 600, gap: 8, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
             >
-              <Play size={18} />
-              <span>{isSubmitted ? 'View Submitted Answer Sheet' : 'Start / Open Examination Paper'}</span>
+              <Play size={16} />
+              <span>{isSubmitted ? 'View Submitted Answers' : 'Start Examination'}</span>
             </button>
           </div>
         )}
@@ -254,7 +442,7 @@ export default function StudentDashboard() {
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', fontWeight: 600, color: 'var(--danger)', background: 'rgba(239, 68, 68, 0.1)', padding: '4px 12px', borderRadius: '12px', marginBottom: '12px' }}>
               <AlertCircle size={14} />
-              <span>SESSION CONCLUDED</span>
+              <span>Concluded</span>
             </div>
 
             <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>
@@ -262,7 +450,7 @@ export default function StudentDashboard() {
             </h3>
 
             <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', maxWidth: '480px', margin: '0 auto 20px' }}>
-              The time limit for this examination has expired. Further submissions are disabled.
+              The time limit for this examination has expired.
             </p>
 
             <button
@@ -277,7 +465,7 @@ export default function StudentDashboard() {
         )}
       </div>
 
-      {/* Submission Receipt Banner */}
+      {/* Submission Receipt Banner on Dashboard */}
       {isSubmitted && submissionReceipt && (
         <div
           className="glass-panel"
@@ -289,8 +477,8 @@ export default function StudentDashboard() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#34d399', fontWeight: 700, marginBottom: '8px' }}>
-            <CheckCircle2 size={20} />
-            <span>SUBMISSION CONFIRMED: DIGITAL RECEIPT GENERATED</span>
+            <CheckCircle2 size={18} />
+            <span>Submission Confirmed</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.82rem', marginTop: '12px' }}>
             <div>
@@ -298,7 +486,7 @@ export default function StudentDashboard() {
               <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-main)' }}>{submissionReceipt.receiptId}</div>
             </div>
             <div>
-              <span style={{ color: 'var(--text-dim)' }}>Audit Hash:</span>
+              <span style={{ color: 'var(--text-dim)' }}>Reference ID:</span>
               <div style={{ fontFamily: 'var(--font-mono)', color: '#38bdf8' }}>{submissionReceipt.txHash.substring(0, 18)}...</div>
             </div>
             <div>
@@ -312,72 +500,6 @@ export default function StudentDashboard() {
           </div>
         </div>
       )}
-
-      {/* Student Exam Modal Workspace */}
-      <Modal
-        isOpen={isExamOpen}
-        onClose={() => setIsExamOpen(false)}
-        title={`Student Examination - ${studentInfo.subject}`}
-      >
-        <form onSubmit={handleSubmitExam}>
-          <div style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '14px', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '2px' }}>
-              {studentInfo.subject}
-            </h2>
-            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-              Candidate: <strong>{studentInfo.name}</strong> ({studentInfo.rollNumber})
-            </div>
-          </div>
-
-          <div>
-            {!displayQuestions || displayQuestions.length === 0 ? (
-              <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
-                No examination questions are currently loaded for this subject.
-              </div>
-            ) : (
-              displayQuestions.map((q, idx) => (
-                <div key={q.id || idx} className="question-item" style={{ marginBottom: '20px' }}>
-                  <div className="question-header">
-                    <span className="question-title">Q{idx + 1}. {q.courseOutcome || `Question ${idx + 1}`}</span>
-                    <span className="marks-pill">{q.marks} Marks</span>
-                  </div>
-                  <p style={{ color: 'var(--text-main)', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: '12px' }}>
-                    {q.questionText}
-                  </p>
-
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                      Your Written Answer / Solution:
-                    </label>
-                    <textarea
-                      rows={3}
-                      className="form-control"
-                      placeholder="Type your answer here..."
-                      value={submittedAnswers[q.id || idx] || ''}
-                      onChange={(e) => handleAnswerChange(q.id || idx, e.target.value)}
-                      disabled={isSubmitted}
-                      style={{ fontSize: '0.86rem' }}
-                    />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {!isSubmitted && displayQuestions.length > 0 && (
-            <div style={{ marginTop: '24px', borderTop: '1px solid var(--border-light)', paddingTop: '16px' }}>
-              <button
-                type="submit"
-                className="btn btn-success"
-                style={{ width: '100%', padding: '12px', fontSize: '0.95rem' }}
-              >
-                <Send size={16} />
-                <span>Submit Final Answer Sheet</span>
-              </button>
-            </div>
-          )}
-        </form>
-      </Modal>
     </div>
   );
 }
