@@ -1,0 +1,21 @@
+# Dependencies
+**/node_modules/
+
+# Secrets & Environment variables
+**/.env
+**/.env.*
+!**/.env.example
+
+# Blockchain & Hardhat artifacts
+blockchain/artifacts/
+blockchain/cache/
+
+# Frontend build
+frontend/dist/
+
+# Logs & OS files
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

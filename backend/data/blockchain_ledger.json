@@ -1,0 +1,14 @@
+[
+  {
+    "txHash": "0x60706b0011929b3f228b50c77c8b485c003812fa07345259e02c6092d82e627b",
+    "blockNumber": 1,
+    "entityId": "Q-TEST-101",
+    "actionType": "QUESTION_CREATED",
+    "userRole": "SUBJECT_EXPERT",
+    "userIdentifier": "expert1",
+    "sha256Hash": "c49f5c54c91fc25a7ad78cf53f68160d9b60da3db0da38a9273e76c2af4bfba3",
+    "timestamp": "2026-10-21T04:52:59.774Z",
+    "onChain": true,
+    "mode": "LOCAL_CONSENSUS_LEDGER"
+  }
+]
