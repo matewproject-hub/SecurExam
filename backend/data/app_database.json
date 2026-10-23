@@ -1,0 +1,75 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "expert1",
+      "password_hash": "$2b$10$wT8m9M90bqv1p3E6VpL3reFqA4e0R2pS9T4f0q1w2e3r4t5y6u7i8",
+      "role": "SUBJECT_EXPERT",
+      "name": "Dr. Jane Smith (Subject Expert)",
+      "department": "Computer Science & Security"
+    },
+    {
+      "id": 2,
+      "username": "admin",
+      "password_hash": "$2b$10$wT8m9M90bqv1p3E6VpL3reFqA4e0R2pS9T4f0q1w2e3r4t5y6u7i8",
+      "role": "ADMIN",
+      "name": "System Administrator"
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q-MVJWT55D",
+      "questionCode": "Q-CO-1919",
+      "questionText": "what is cat",
+      "correctOption": "animal",
+      "distractors": [
+        "flower",
+        "bird",
+        "fish"
+      ],
+      "subject": "Computer Security & Cryptography",
+      "topic": "General Unit",
+      "bloomLevel": "Apply (Level 3)",
+      "courseOutcome": "CO3: System Vulnerabilities & Security Protocols",
+      "difficulty": "MEDIUM",
+      "marks": 2,
+      "distractorsWithRationale": [
+        {
+          "text": "flower",
+          "rationale": ""
+        },
+        {
+          "text": "bird",
+          "rationale": ""
+        },
+        {
+          "text": "fish",
+          "rationale": ""
+        }
+      ],
+      "rationale": "",
+      "sha256Hash": "3616d59f97ddc8d9110fbf5fb29212a24caf759dc8c829dafae2240393f0ebee",
+      "blockchainTx": "0x587b42995614a5561cb79c8ef185a6a46d34e7d0f40a9680d4feffe1f27c7b11",
+      "blockNumber": 2,
+      "status": "SUBMITTED",
+      "submittedBy": "Dr. Sarah Lin (EXP-101)",
+      "submittedRole": "SUBJECT_EXPERT",
+      "submittedAt": "2026-10-22T19:03:47.281Z",
+      "integrityVerified": true
+    }
+  ],
+  "question_actions": [
+    {
+      "id": "ACT-MVJWT55G",
+      "entityId": "Q-CO-1919",
+      "actionType": "QUESTION_CREATED",
+      "userRole": "SUBJECT_EXPERT",
+      "userIdentifier": "Dr. Sarah Lin (EXP-101)",
+      "sha256Hash": "3616d59f97ddc8d9110fbf5fb29212a24caf759dc8c829dafae2240393f0ebee",
+      "txHash": "0x587b42995614a5561cb79c8ef185a6a46d34e7d0f40a9680d4feffe1f27c7b11",
+      "timestamp": "2026-10-22T19:03:47.281Z"
+    }
+  ],
+  "exams": [],
+  "papers": []
+}

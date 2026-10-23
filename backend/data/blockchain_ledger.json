@@ -10,5 +10,17 @@
     "timestamp": "2026-10-21T04:52:59.774Z",
     "onChain": true,
     "mode": "LOCAL_CONSENSUS_LEDGER"
+  },
+  {
+    "txHash": "0x587b42995614a5561cb79c8ef185a6a46d34e7d0f40a9680d4feffe1f27c7b11",
+    "blockNumber": 2,
+    "entityId": "Q-CO-1919",
+    "actionType": "QUESTION_CREATED",
+    "userRole": "SUBJECT_EXPERT",
+    "userIdentifier": "Dr. Sarah Lin (EXP-101)",
+    "sha256Hash": "3616d59f97ddc8d9110fbf5fb29212a24caf759dc8c829dafae2240393f0ebee",
+    "timestamp": "2026-10-22T19:03:47.276Z",
+    "onChain": true,
+    "mode": "LOCAL_CONSENSUS_LEDGER"
   }
 ]

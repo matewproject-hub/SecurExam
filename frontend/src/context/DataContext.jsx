@@ -507,26 +507,23 @@ export function DataProvider({ children }) {
       actions: [initialAction]
     };
 
+    const response = await fetch('http://localhost:5000/api/questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...questionData,
+        questionCode,
+        authorName: userName,
+        distractors: validDistractors
+      })
+    });
+    const responseBody = await response.json();
+    if (!response.ok) {
+      throw new Error(responseBody.error || 'Failed to save question');
+    }
+
     setQuestions((prev) => [newQuestion, ...prev]);
     addAuditLog('QUESTION_CREATED', userName, userRole, txHash, questionCode);
-
-    // Asynchronously notify backend REST API if running
-    try {
-      fetch('http://localhost:5000/api/questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...questionData,
-          questionCode,
-          authorName: userName,
-          distractors: validDistractors
-        })
-      }).catch(() => {
-        // Dual-mode: silently operate offline if backend server is not running
-      });
-    } catch {
-      // offline fallback
-    }
 
     return newQuestion;
   };
